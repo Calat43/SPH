@@ -9,8 +9,8 @@ set term gif \
 #    font "Times-Roman,10"
 set output "rho.gif"
 set size square
-set xrange[0:1]
-set yrange[5:6]
+set xrange[-0.5:1.5]
+set yrange[-0.01:0.2]
 set xzeroaxis
 do for [i=0:499] {
 	plot sprintf("rho/frame_%d.dat", i)

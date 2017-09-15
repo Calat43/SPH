@@ -9,7 +9,7 @@ set term gif \
 #    font "Times-Roman,10"
 set output "velocity.gif"
 set size square
-set xrange[0:1]
+set xrange[-0.5:1.5]
 set yrange[-0.1:0.1]
 set xzeroaxis
 do for [i=0:499] {
