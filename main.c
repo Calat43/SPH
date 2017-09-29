@@ -9,306 +9,224 @@ const double T = 0.5;
 const double left = 0;
 const double right = 1;
 const int amount = 400;
-const double h = 0.01;
+const double h = 0.08;
 const double tau = 0.001;
 const double c_s = 1;
 
-//распределение плотности частиц в пространстве
-double particle_distribution(double x)
+//начальное распределение плотности газа
+double gdensity_distribution(double x)
 {
     return 1;
-            //sin(2.*pi*x)/100. + 1;
+            //sin(2*pi*x)/100. + 1;
 }
 
-//начальное распределение скорости
-double velocity_distribution(double x)
+//начальное распределение скорости газа
+double gvelocity_distribution(double x)
 {
     return 0;
-            //sin(2.*pi*x)/100.;
+    //sin(2.*pi*x)/100.;
 }
 
-double gauss_kernel(double x_a, double x_b)
+//начальное положение частиц газа (заполняется сразу как массив, равномерно)
+void gcoordinate_distribution(double * x_g)
 {
-    return 1 / h / sqrt(pi) * exp(-pow(x_a - x_b, 2) / h / h);
-}
-
-double gauss_gradient(double x_a, double x_b)
-{
-    return - 2 * (x_a - x_b) / pow(h, 2) * gauss_kernel(x_a, x_b);
+    for (int i = 0; i < amount; ++i)
+    {
+        x_g[i] = left + i * (right - left) / (amount - 1);
+    }
 }
 
 double spline_kernel(double x_a, double x_b)
 {
     double r = fabs(x_a - x_b);
+    double q = r / h;
     double result = 0;
     if (r / h >= 0 && r / h <= 1)
     {
-        result = 1 - 3. / 2 * pow(r, 2) + 3. / 4 * pow(r, 3);
-        return 1./h/pi * result;
+        result = 1 - 3. / 2 * pow(q, 2) + 3. / 4 * pow(q, 3);
+        return 2./ 3. / h * result;
     }
     if (r / h >= 1 && r / h <= 2)
     {
-        result = 1. / 4 * pow((2. - r), 3);
-        return 1./h/pi * result;
+        result = 1. / 4 * pow((2. - q), 3);
+        return 2./ 3. / h * result;
     }
-    return 1./h/pi * result;
-}
-
-double spline_gradient0(double x_a, double x_b)
-{
-    double r = x_a - x_b;
-    double abs_r = fabs(x_a - x_b);
-    double result = 0;
-    if (abs_r / h >= 0 && abs_r / h <= 1)
-    {
-        result = - 3 * r + 9. / 4 * pow(r, 2);
-        return 1./h/pi * result;
-    }
-    if (abs_r / h >= 1 && abs_r / h <= 2)
-    {
-        result = - 3. / 4 * pow((2. - r), 2);
-        return 1./h/pi * result;
-    }
-    return 1./h/pi * result;
-}
-
-double derivative_r(double x_a, double x_b)
-{
-    if (x_a > x_b)
-    {
-        return 1;
-    }
-    else if (x_a < x_b)
-    {
-        return -1;
-    }
-    return 0;
+    return 2./ 3. / h * result;
 }
 
 double spline_gradient(double x_a, double x_b)
 {
     double r = fabs(x_a - x_b);
+    double q = r / h;
     double result = 0;
-    if (r / h >= 0 && r / h <= 1)
+
+    if(q >= 0 && q <= 1)
+    {
+        result = - 3 * q + 9. / 4. * q *  q;
+    }
+    if( q > 1 && q <= 2)
+    {
+        result = - 3. / 4. * pow((2 - q), 2);
+    }
+    if (x_a > x_b)
+    {
+        return 2./3. / h / h * result;
+    }
+    if (x_a == x_b)
+    {
+        return 0;
+    }
+    if (x_a < x_b)
+    {
+        return - 2./3. / h / h * result;
+    }
+    //return (x_a - x_b) * 2. / 3. / h / h * result;
+}
+
+double spline_gradient1(double x_a, double x_b)
+{
+    double r = fabs(x_a - x_b);
+    double q = r / h;
+    double result = 0;
+
+    if (q >= 0 && q <= 1)
     {
         if (x_a >= x_b)
         {
-            result = -3 * (x_a - x_b) + 9. / 4 * pow(x_a - x_b, 2);
+            result = -3. / h / h * (x_a - x_b) + 9. / 4. / pow(h, 3) * pow((x_a - x_b), 2);
         }
-        else
+        if (x_a < x_b)
         {
-            result = -3 * (x_a - x_b) - 9. / 4 * pow(x_a - x_b, 2);
+            result = -3. / h / h * (x_a - x_b) - 9. / 4. / pow(h, 3) * pow((x_a - x_b), 2);
         }
     }
-    else if (r / h >= 1 && r / h <= 2)
+    if (q > 1 && q <= 2)
     {
-        if (x_a >= x_b)
+        if(x_a >= x_b)
         {
-            result = - 3. / 4 * pow((2. - (x_a - x_b)), 2);
+            result = -3.* x_a/h + 3./h/h * (x_a - x_b) - 3./4./pow(h,3) * pow((x_a - x_b), 2);
         }
-        else
+        if(x_a < x_b)
         {
-            result = 3. / 4 * pow((2. + (x_a - x_b)), 2);
+            result = 3. * x_a / h + 3./h/h * (x_a - x_b) + 3./4./pow(h, 3) * pow((x_a - x_b), h);
         }
     }
-    return 1./h/pi * result;
+    return 2./3./h * result;
 }
 
-//координаты точек располагаются равномерно (пока что)
-void fill_x(double * x)
-{
-    for (int i = 0; i < amount; ++i)
-    {
-        x[i] = left + i * (right - left) / (amount - 1);
-    }
-}
-
-double fill_image_x(double * image_x)
-{
-    double new_left = left - (right - left);
-    double new_right = right + (right + left);
-
-    for (int j = 0; j < 3 * amount - 2; ++j)
-    {
-        image_x[j] = new_left + j * (new_right - new_left) / (3*(amount - 1));
-    }
-}
-
-void fill_mass(double * mass, double * x, double average, double flat_mass)
-{
-    for(int i = 0; i < amount; ++i)
-    {
-        //mass[i] = particle_distribution(x[i]);
-        mass[i] = particle_distribution(x[i]) / average * flat_mass;
-    }
-}
-
-void fill_image_mass(double * image_mass, double * image_x, double avarage_x, double flat_mass)
-{
-    for (int i = 0; i < amount; ++i)
-    {
-        double real_mass_i = 1./(double)amount;
-                //particle_distribution(image_x[amount - 1 + i]) / avarage_x * flat_mass;
-        image_mass[i] = real_mass_i;
-
-        image_mass[amount - 1 + i] = 0;
-        image_mass[2 * amount - 2 + i] = 0;
-
-        //image_mass[amount - 1 + i] = real_mass_i;
-        //image_mass[2 * amount - 2 + i] = real_mass_i;
-    }
-}
-
-double found_flat_mass(double * image_x, double density)
+//масса газа, находящаяся при постоянной плотности из предположения, что масса всех частиц одинакова
+double found_flat_gmass(double * x_g, double density)
 {
     double mass = 0;
+    for (int j = 0; j < amount; ++j)
     {
-        for (int j = 0; j < 3*amount - 2; ++j)
-        {
-            mass += spline_kernel(image_x[amount - 1], image_x[j]);
-        }
+        mass += spline_kernel(x_g[amount], x_g[j]);
     }
     return density / mass;
 }
 
-void fill_flat_rho(double * rho, double * x, double * image_x, double flat_mass)
-{
-    for (int i = 0; i < amount; ++i)
-    {
-        rho[i] = 0;
-        for (int j = 0; j < 3 * amount - 2; ++j)
-        {
-            rho[i] += flat_mass * spline_kernel(x[i], image_x[j]);
-        }
-    }
-}
-
-void fill_rho(double * image_rho, double  * image_mass, double * image_x)
+//заполнение массива, содержащего массы частиц газа
+void fill_gmass(double * gmass, double * x_g, double average_grho)
 {
     for(int i = 0; i < amount; ++i)
     {
-        double real_rho_i = 0;
-        for (int j = 0; j < 3*amount - 2; ++j)
-        {
-            real_rho_i += image_mass[j] * spline_kernel(image_x[amount - 1 + i], image_x[j]);
-        }
-        image_rho[i] = real_rho_i;
-        image_rho[amount - 1 + i] = real_rho_i;
-        image_rho[2*amount - 2 + i] = real_rho_i;
+        gmass[i] = 1/ (double)amount;
+        //gmass[i] = gdensity_distribution(x_g[i]) / average_grho * found_flat_gmass(x_g, average_grho);
     }
 }
 
-void fill_image_rho(double * image_rho, double  * image_mass, double * image_x)
+//заполнение массива начального распределения плотности газа
+void fill_initial_grho(double * grho, double  * gmass, double * x_g)
 {
     for(int i = 0; i < amount; ++i)
     {
-        double real_rho_i = 0;
-        for (int j = 0; j < 3*amount - 2; ++j)
+        for (int j = 0; j < amount; ++j)
         {
-            real_rho_i += image_mass[j] * spline_kernel(image_x[amount - 1 + i], image_x[j]);
+            grho[i] += gmass[j] * spline_kernel(x_g[i], x_g[j]);
         }
-        image_rho[i] = real_rho_i;
-        image_rho[amount - 1 + i] = real_rho_i;
-        image_rho[2*amount - 2 + i] = real_rho_i;
     }
 }
 
-double fill_velocity(double * velocity, double * x)
+double fill_initial_velocity(double * gvelocity, double * x_g)
 {
     for (int i = 0; i < amount; ++i)
     {
-        velocity[i] = velocity_distribution(x[i]);
+        gvelocity[i] = gvelocity_distribution(x_g[i]);
     }
 }
 
-double fill_image_velocity(double * image_velocity, double * image_x)
-{
-    for(int i = 0; i < amount; ++i)
-    {
-        double real_v_i = velocity_distribution(image_x[amount - 1 + i]);
-        image_velocity[i] = real_v_i;
-        image_velocity[amount - 1 + i] = real_v_i;
-        image_velocity[2*amount - 2 + i] = real_v_i;
-    }
-}
-
-// TODO replace with imaginary version
-double rho_error(double * rho, double * x)
-{
-    double error = 0;
-    for (int i = 0; i < amount; ++i)
-    {
-        if(fabs(rho[i] - particle_distribution(x[i])) > error)
-        {
-            error = fabs(rho[i] - particle_distribution(x[i]));
-        }
-    }
-    return error;
-}
-
-
-double found_next_rho(double * image_velocity, double * image_mass, double * image_x, double prev_rho, double tau, int i)
+double found_next_grho(double * prev_gvelocity, double * gmass, double * x_g, double prev_grho, int i)
 {
     double rho = 0;
-    for(int j = 0; j < 3 * amount - 2; ++j)
+    for(int j = 0; j < amount; ++j)
     {
-        rho += image_mass[j] * (image_velocity[i] - image_velocity[j]) * spline_gradient(image_x[i], image_x[j]);
+        rho += gmass[j] * spline_kernel(x_g[i], x_g[j]);
+        //rho += gmass[j] * (prev_gvelocity[i] - prev_gvelocity[j]) * spline_gradient(x_g[i], x_g[j]);
     }
-    return tau * rho + prev_rho;
+    return rho;
+            //tau * rho + prev_grho;
 }
 
-double found_next_gvelocity(double * image_rho, double * image_mass, double * image_x, double prev_velocity, double c_s, double tau, int i)
+double found_next_gvelocity(double * prev_grho, double * gmass, double * x_g, double prev_gvelocity, int i)
 {
     double velocity = 0;
-    for(int j = 0; j < 3 * amount - 2; ++j)
+    for(int j = 0; j < amount; ++j)
     {
-        velocity += image_mass[j] * (1. / image_rho[j] + 1. / image_rho[i]) * spline_gradient(image_x[i], image_x[j]);
+        velocity += gmass[j] * (1. / prev_grho[j] + 1. / prev_grho[i]) * spline_gradient(x_g[i], x_g[j]);
     }
-    return -tau * pow(c_s, 2) * velocity + prev_velocity;
+    return -tau * pow(c_s, 2) * velocity + prev_gvelocity;
+}
+
+double found_next_coordinate(double * prev_x_g, double * prev_gvelocity, int i)
+{
+        return prev_x_g[i] + tau * prev_gvelocity[i];
+}
+
+double found_a(double * prev_grho, double * gmass, double * x_g, int i)
+{
+    double a = 0;
+    for(int j = 0; j < amount; ++j)
+    {
+        a += gmass[j] * (1. / prev_grho[j] + 1. / prev_grho[i]) * spline_gradient(x_g[i], x_g[j]);
+    }
+    return a;
+
 }
 
 int main()
 {
-    /*   left image   real   right image
-     * |............|......|.............|
-     * ^            ^      ^             ^
-     * 0    (amount-1)    (2*amount-2)  (3*amount-3)
-     */
-    double image_x[3 * amount - 2];
-    double image_rho[3 * amount - 2];
-    double image_mass[3 * amount - 2];
+    double prev_x_g[amount];
+    double next_x_g[amount];
 
-    double prev_gvelocity[3*amount - 2];
-    double next_gvelocity[3*amount - 2];
-    double prev_grho[3*amount - 2];
-    double next_grho[3*amount - 2];
+    double gmass[amount];
 
-    double x[amount];
-    double mass[amount];
+    double prev_gvelocity[amount];
+    double next_gvelocity[amount];
 
-    fill_x(x);
+    double prev_grho[amount];
+    double next_grho[amount];
 
-    //fill_image_x(image_x);
-    //fill_image_velocity(prev_gvelocity, image_x);
+    gcoordinate_distribution(prev_x_g);
 
-    double average_f = particle_distribution(0);
-    double flat_mass = found_flat_mass(image_x, average_f);
+    double average_grho = gdensity_distribution(0);
+    fill_gmass(gmass, prev_x_g, average_grho);
 
-    fill_mass(mass, x, average_f, flat_mass);
-    fill_image_mass(image_mass, image_x, average_f, flat_mass);
+    fill_initial_grho(prev_grho, gmass, prev_x_g);
+    fill_initial_velocity(prev_gvelocity, prev_x_g);
 
-    fill_image_rho(image_rho, image_mass, image_x);
+    double a[amount];
 
-    FILE * fout = fopen("/home/calat/CLionProjects/particles/output.txt", "w");
-
-    for(int i = amount - 1; i < 2 * amount - 1; ++i)
+    for (int i = 0; i < amount; ++i)
     {
-        fprintf(fout, "%lf %lf\n", image_x[i], image_mass[i]);
+        a[i] = found_a(prev_grho, gmass, prev_x_g, i);
     }
 
-    for(int i = 0; i < 3 * amount - 2; ++i)
+
+    FILE * fout = fopen("/home/calat/CLionProjects/particles/output2.txt", "w");
+
+    for(int i = 0; i < amount; ++i)
     {
-        prev_grho[i] = image_rho[i];
+        fprintf(fout, "%lf %lf\n", prev_x_g[i], prev_grho[i]);
     }
 
     char fileName[512];
@@ -316,32 +234,36 @@ int main()
     {
         sprintf(fileName, "/home/calat/CLionProjects/particles/rho/frame_%d.dat", frameId);
         FILE * rho_frame = fopen(fileName, "w");
-        for (int i = 0; i < 3 * amount - 2; ++i)
+        for (int i = 0; i < amount; ++i)
         {
-            fprintf(rho_frame, "%lf %0.15lf\n", image_x[i], prev_grho[i]);
+            fprintf(rho_frame, "%lf %0.15lf\n", prev_x_g[i], prev_grho[i]);
         }
         fclose(rho_frame);
 
         sprintf(fileName, "/home/calat/CLionProjects/particles/velocity/frame_%d.dat", frameId);
         FILE * velocity_frame = fopen(fileName, "w");
-        for (int i = 0; i < 3 * amount - 2; ++i)
+        for (int i = 0; i < amount; ++i)
         {
-            fprintf(velocity_frame, "%lf %0.15lf\n", image_x[i], prev_gvelocity[i]);
+            fprintf(velocity_frame, "%lf %0.15lf\n", prev_x_g[i], prev_gvelocity[i]);
         }
         fclose(velocity_frame);
 
-        for(int i = 0; i < 3 * amount - 2; ++i)
+        for(int i = 0; i < amount; ++i)
         {
-            next_grho[i] = found_next_rho(prev_gvelocity, image_mass, image_x, prev_grho[i], tau, i);
-            next_gvelocity[i] = found_next_gvelocity(prev_grho, image_mass, image_x, prev_gvelocity[i], c_s, tau, i);
+            next_grho[i] = found_next_grho(prev_gvelocity, gmass, prev_x_g, prev_grho[i], i);
+            next_gvelocity[i] = found_next_gvelocity(prev_grho, gmass, prev_x_g, prev_gvelocity[i], i);
+            next_x_g[i] = found_next_coordinate(prev_x_g, prev_gvelocity, i);
         }
 
-        for(int i = 0; i < 3 * amount - 2; ++i)
+        for(int i = 0; i < amount; ++i)
         {
             prev_grho[i] = next_grho[i];
             prev_gvelocity[i] = next_gvelocity[i];
+            prev_x_g[i] = next_x_g[i];
+
         }
     }
+
 
     return 0;
 }
