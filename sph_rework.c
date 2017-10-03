@@ -9,7 +9,7 @@ const double T = 0.5;
 const double left = 0;
 const double right = 1;
 const int amount = 400;
-const double h = 0.01;
+const double h = 0.08;
 const double tau = 0.001;
 const double c_s = 1;
 

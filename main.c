@@ -222,7 +222,7 @@ int main()
     }
 
 
-    FILE * fout = fopen("/home/calat/CLionProjects/particles/output2.txt", "w");
+    FILE * fout = fopen("/home/calat/CLionProjects/particles/output.txt", "w");
 
     for(int i = 0; i < amount; ++i)
     {
