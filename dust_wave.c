@@ -12,35 +12,6 @@ double dvelocity_distribution(double x)
     return sin(2.*pi*x)/100.;
 }
 
-//начальное положение частиц пыли (заполняется сразу как массив, равномерно)
-void dcoordinate_distribution(double * x_d, ParticleParams params)
-{
-    int amount = params.amount;
-    double left = params.left;
-    double right = params.right;
-
-    for (int i = 0; i < amount; ++i)
-    {
-        x_d[i] = left + i * (right - left) / (amount - 1);
-    }
-}
-
-//начальное положение частиц пыли (в том числе мнимых)
-double fill_dimage_x(double * image_x, ParticleParams params)
-{
-    int amount = params.amount;
-    double left = params.left;
-    double right = params.right;
-
-    double new_left = left - (right - left);
-    double new_right = right + (right + left);
-
-    for (int j = 0; j < 3 * amount - 2; ++j)
-    {
-        image_x[j] = new_left + j * (new_right - new_left) / (3*(amount - 1));
-    }
-}
-
 //масса пыли, находящаяся при постоянной плотности из предположения, что масса всех частиц одинакова
 double found_flat_dmass(double * image_x_d, double density, ParticleParams particle_params, ProblemParams problem_params)
 {
@@ -68,35 +39,7 @@ void fill_dmass(double * dmass, double * x_d, double * image_x_d, double average
     }
 }
 
-void fill_dimage(double * image, double * real, ParticleParams params)
-{
-    int amount = params.amount;
-
-    for (int i = 0; i < amount; ++i)
-    {
-        image[i] = real[i];
-        image[amount - 1 + i] = real[i];
-        image[2 * amount - 2 + i] = real[i];
-    }
-}
-
-
-//заполнение массива начального распределения плотности пыли
-void fill_initial_drho(double * drho, double  * image_dmass, double * x_d, double * image_x_d,
-                       ParticleParams particle_params, ProblemParams problem_params)
-{
-    int amount = particle_params.amount;
-
-    for(int i = 0; i < amount; ++i)
-    {
-        for (int j = 0; j < 3 * amount - 2; ++j)
-        {
-            drho[i] += image_dmass[j] * spline_kernel(x_d[i], image_x_d[j], problem_params);
-        }
-    }
-}
-
-double fill_initial_dvelocity(double * dvelocity, double * x_d, ParticleParams params)
+void fill_initial_dvelocity(double * dvelocity, double * x_d, ParticleParams params)
 {
     for (int i = 0; i < params.amount; ++i)
     {
@@ -104,44 +47,9 @@ double fill_initial_dvelocity(double * dvelocity, double * x_d, ParticleParams p
     }
 }
 
-double found_next_drho(double * dmass, double * x_d, int i, ParticleParams particle_params, ProblemParams problem_params)
-{
-    int amount = particle_params.amount;
-
-    double rho = 0;
-    for(int j = 0; j < amount; ++j)
-    {
-        rho += dmass[j] * spline_kernel(x_d[i], x_d[j], problem_params);
-    }
-    return rho;
-}
-
-double found_next_image_drho(double * image_dmass, double * x_d, double * image_x_d, int i,
-                             ParticleParams particle_params, ProblemParams problem_params)
-{
-    int amount = particle_params.amount;
-
-    double rho = 0;
-    for(int j = 0; j < 3 * amount - 2; ++j)
-    {
-        rho += image_dmass[j] * spline_kernel(x_d[i], image_x_d[j], problem_params);
-    }
-    return rho;
-}
-
-double found_next_dvelocity(double prev_dvelocity)
-{
-    return prev_dvelocity;
-}
-
 double found_next_image_dvelocity(double prev_dvelocity)
 {
     return prev_dvelocity;
-}
-
-double found_next_dcoordinate(double prev_x_d, double prev_dvelocity, ProblemParams params)
-{
-    return prev_x_d + params.tau * prev_dvelocity;
 }
 
 void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params)
@@ -169,18 +77,18 @@ void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params
     double prev_image_drho[3 * amount - 2];
     double next_image_drho[3 * amount - 2];
 
-    dcoordinate_distribution(prev_x_d, particle_params);
-    fill_dimage_x(prev_image_x_d, particle_params);
+    coordinate_distribution(prev_x_d, particle_params);
+    fill_image_x(prev_image_x_d, particle_params);
 
     double average_drho = ddensity_distribution(0);
     fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, particle_params, problem_params);
-    fill_dimage(image_dmass, dmass, particle_params);
+    fill_image(image_dmass, dmass, particle_params);
 
-    fill_initial_drho(prev_drho, image_dmass, prev_x_d, prev_image_x_d, particle_params, problem_params);
+    fill_initial_rho(prev_drho, image_dmass, prev_x_d, prev_image_x_d, particle_params, problem_params);
     fill_initial_dvelocity(prev_dvelocity, prev_x_d, particle_params);
 
-    fill_dimage(prev_image_drho, prev_drho, particle_params);
-    fill_dimage(prev_image_dvelocity, prev_dvelocity, particle_params);
+    fill_image(prev_image_drho, prev_drho, particle_params);
+    fill_image(prev_image_dvelocity, prev_dvelocity, particle_params);
     //Блок массивов для пыли.END
 
     FILE * fout = fopen("/home/calat/CLionProjects/particles/output.txt", "w");
@@ -214,17 +122,17 @@ void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params
 
         for(int i = 0; i < amount; ++i)
         {
-            next_drho[i] = found_next_image_drho(image_dmass, prev_x_d, prev_image_x_d, i, particle_params, problem_params);
+            next_drho[i] = found_next_image_rho(image_dmass, prev_x_d, prev_image_x_d, i, particle_params, problem_params);
             next_dvelocity[i] = found_next_image_dvelocity(prev_dvelocity[i]);
-            next_x_d[i] = found_next_dcoordinate(prev_x_d[i], prev_dvelocity[i], problem_params);
+            next_x_d[i] = found_next_coordinate(prev_x_d[i], prev_dvelocity[i], problem_params);
         }
 
-        fill_dimage(next_image_drho, next_drho, particle_params);
-        fill_dimage(next_image_dvelocity, next_dvelocity, particle_params);
+        fill_image(next_image_drho, next_drho, particle_params);
+        fill_image(next_image_dvelocity, next_dvelocity, particle_params);
 
         for (int i = 0; i < 3 * amount - 2; ++i)
         {
-            next_image_x_d[i] = found_next_dcoordinate(prev_image_x_d[i], prev_image_dvelocity[i], problem_params);
+            next_image_x_d[i] = found_next_coordinate(prev_image_x_d[i], prev_image_dvelocity[i], problem_params);
         }
 
         for(int i = 0; i < amount; ++i)

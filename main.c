@@ -21,8 +21,14 @@ int main()
     dw_particle.left = 0;
     dw_particle.right = 1;
 
+    ParticleParams gw_particle;
+    gw_particle.amount = 400;
+    gw_particle.left = 0;
+    gw_particle.right = 1;
+
     //stair_gas_print(gs_particle, problem_params);
-    only_dust_wave(dw_particle, problem_params);
+    //only_dust_wave(dw_particle, problem_params);
+    //only_gas_wave(gw_particle, problem_params);
 
     return 0;
 }
