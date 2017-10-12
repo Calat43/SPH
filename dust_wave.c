@@ -122,7 +122,7 @@ void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params
 
         for(int i = 0; i < amount; ++i)
         {
-            next_drho[i] = found_next_image_rho(image_dmass, prev_x_d, prev_image_x_d, i, particle_params, problem_params);
+            next_drho[i] = found_next_rho(image_dmass, prev_x_d, prev_image_x_d, i, particle_params, problem_params);
             next_dvelocity[i] = found_next_image_dvelocity(prev_dvelocity[i]);
             next_x_d[i] = found_next_coordinate(prev_x_d[i], prev_dvelocity[i], problem_params);
         }

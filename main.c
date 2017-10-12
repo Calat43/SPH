@@ -2,6 +2,7 @@
 #include "gas_stair.h"
 #include "gas_wave.h"
 #include "dust_wave.h"
+#include "four_eq.h"
 
 int main()
 {
@@ -10,6 +11,7 @@ int main()
     problem_params.h = 0.04;
     problem_params.tau = 0.001;
     problem_params.c_s = 1;
+    problem_params.K = 1;
 
     ParticleParams gs_particle;
     gs_particle.amount = 400;
@@ -30,6 +32,7 @@ int main()
     //only_dust_wave(dw_particle, problem_params);
     //only_gas_wave(gw_particle, problem_params);
 
+    whole_system(gw_particle, dw_particle, problem_params);
+
     return 0;
 }
-

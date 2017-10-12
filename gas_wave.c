@@ -132,7 +132,7 @@ void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params)
 
         for(int i = 0; i < amount; ++i)
         {
-            next_grho[i] = found_next_image_rho(image_gmass, prev_x_g, prev_image_x_g, i, particle_params, problem_params);
+            next_grho[i] = found_next_rho(image_gmass, prev_x_g, prev_image_x_g, i, particle_params, problem_params);
             next_gvelocity[i] = found_next_image_gvelocity(prev_grho[i], prev_image_grho, image_gmass, prev_x_g,
                                                            prev_image_x_g, prev_gvelocity[i], i, particle_params, problem_params);
             next_x_g[i] = found_next_coordinate(prev_x_g[i], prev_gvelocity[i], problem_params);

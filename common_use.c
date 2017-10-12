@@ -110,7 +110,7 @@ void fill_initial_rho(double * rho, double  * image_mass, double * x, double * i
     }
 }
 
-double found_next_image_rho(double * image_mass, double * x, double * image_x, int i,
+double found_next_rho(double * image_mass, double * x, double * image_x, int i,
                              ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
@@ -121,4 +121,18 @@ double found_next_image_rho(double * image_mass, double * x, double * image_x, i
         rho += image_mass[j] * spline_kernel(x[i], image_x[j], problem_params);
     }
     return rho;
+}
+
+double point_value(double x, double * image_function, double * image_mass, double * image_rho, double * image_x,
+                   ParticleParams particle_params, ProblemParams problem_params)
+{
+    int amount = particle_params.amount;
+    double result = 0;
+
+    for (int j = 0; j < 3 * amount - 2; ++j)
+    {
+        result += image_mass[j] * image_function[j] / image_rho[j] * spline_kernel(x, image_x[j], problem_params);
+    }
+
+    return result;
 }

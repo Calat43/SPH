@@ -16,6 +16,7 @@ typedef struct _problemParams{
     double h;
     double tau;
     double c_s;
+    double K;
 } ProblemParams;
 
 double spline_kernel(double x_a, double x_b, ProblemParams params);
@@ -33,5 +34,8 @@ void fill_image(double * image, double * real, ParticleParams params);
 void fill_initial_rho(double * rho, double  * image_mass, double * x, double * image_x,
                       ParticleParams particle_params, ProblemParams problem_params);
 
-double found_next_image_rho(double * image_mass, double * x, double * image_x, int i,
+double found_next_rho(double * image_mass, double * x, double * image_x, int i,
                             ParticleParams particle_params, ProblemParams problem_params);
+
+double point_value(double x, double * image_function, double * image_mass, double * image_rho, double * image_x,
+                   ParticleParams particle_params, ProblemParams problem_params);
