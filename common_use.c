@@ -136,3 +136,17 @@ double point_value(double x, double * image_function, double * image_mass, doubl
 
     return result;
 }
+
+double point_value_for_rho(double x, double * image_mass, double * image_x, ParticleParams particle_params,
+                           ProblemParams problem_params)
+{
+    int amount = particle_params.amount;
+    double result = 0;
+
+    for(int j = 0; j < 3 * amount - 2; ++j)
+    {
+        result += image_mass[j] * spline_kernel(x, image_x[j], problem_params);
+    }
+
+    return result;
+}

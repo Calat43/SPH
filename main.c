@@ -3,13 +3,14 @@
 #include "gas_wave.h"
 #include "dust_wave.h"
 #include "four_eq.h"
+#include "xy_system.h"
 
 int main()
 {
     ProblemParams problem_params;
     problem_params.T = 0.5;
     problem_params.h = 0.04;
-    problem_params.tau = 0.001;
+    problem_params.tau = 0.02;
     problem_params.c_s = 1;
     problem_params.K = 1;
 
@@ -31,8 +32,9 @@ int main()
     //stair_gas_print(gs_particle, problem_params);
     //only_dust_wave(dw_particle, problem_params);
     //only_gas_wave(gw_particle, problem_params);
+    //whole_system(gw_particle, dw_particle, problem_params);
 
-    whole_system(gw_particle, dw_particle, problem_params);
+    xy_system(gw_particle, dw_particle, problem_params);
 
     return 0;
 }
