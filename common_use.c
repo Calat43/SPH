@@ -131,7 +131,7 @@ double point_value(double x, double * image_function, double * image_mass, doubl
 
     for (int j = 0; j < 3 * amount - 2; ++j)
     {
-        result += image_mass[j] * image_function[j] / image_rho[j] * spline_kernel(x, image_x[j], problem_params);
+        result += image_mass[j] * (image_function[j] / image_rho[j]) * spline_kernel(x, image_x[j], problem_params);
     }
 
     return result;
