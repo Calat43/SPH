@@ -10,10 +10,10 @@ int main()
 {
     ProblemParams problem_params;
     problem_params.T = 0.5;
-    problem_params.h = 0.01;
+    problem_params.h = 0.005;
     problem_params.tau = 0.001;
     problem_params.c_s = 1;
-    problem_params.K = 1;
+    problem_params.K = 500;
 
     ParticleParams gs_particle;
     gs_particle.amount = 400;

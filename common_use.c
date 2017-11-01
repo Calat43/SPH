@@ -50,6 +50,24 @@ double spline_gradient(double x_a, double x_b, ProblemParams params)
     }
 }
 
+double positive_minus()
+{
+    if (1)
+    {
+
+    }
+}
+
+void fill_kernel(double * kernel)
+{
+
+}
+
+void fill_kernel_gradient()
+{
+
+}
+
 double found_next_coordinate(double prev_x, double prev_vel, ProblemParams params)
 {
     return prev_x + params.tau * prev_vel;

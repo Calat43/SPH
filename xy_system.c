@@ -50,8 +50,8 @@ double found_next_y(double prev_y, double * image_gmass, double * prev_image_grh
     double tau = problem_params.tau;
     double c_s = problem_params.c_s;
 
-    double result;
-    double sum;
+    double result = 0;
+    double sum = 0;
 
     for(int j = 0; j < 3 * amount - 2; ++j)
     {
@@ -75,12 +75,11 @@ double found_next_gvelocity(double next_x, double next_y, double rho_div)
 
 double near_velocity(double r, double * coordinate, double * velocity, ParticleParams params)
 {
-    double max = fabs(r - coordinate[0]);
-    int nearly;
+    int nearly = 0;
 
     for (int i = 0; i < params.amount; ++i)
     {
-        if (fabs(r - coordinate[i]) < max)
+        if (fabs(r - coordinate[i]) < fabs(r - coordinate[nearly]))
         {
             nearly = i;
         }
@@ -173,12 +172,15 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
 
     for(int i = 0; i < gamount; ++i)
     {
-        prev_drho_xg[i] = point_value_for_rho(prev_x_g[i], image_dmass, prev_image_x_d, dust_params, problem_params);
-        prev_grho_xd[i] = point_value_for_rho(prev_x_d[i], image_gmass, prev_image_x_g, gas_params, problem_params);
-        prev_gvel_xd[i] = point_value(prev_x_d[i], prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g,
-                                        gas_params, problem_params);
-        prev_dvel_xg[i] = point_value(prev_x_g[i], prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d,
-                                        dust_params, problem_params);
+        prev_grho_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_grho, dust_params);
+        prev_drho_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_drho, gas_params);
+        //prev_drho_xg[i] = point_value_for_rho(prev_x_g[i], image_dmass, prev_image_x_d, dust_params, problem_params);
+        //prev_grho_xd[i] = point_value_for_rho(prev_x_d[i], image_gmass, prev_image_x_g, gas_params, problem_params);
+
+        prev_gvel_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_gvelocity, dust_params);
+        prev_dvel_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_dvelocity, gas_params);
+        //prev_gvel_xd[i] = point_value(prev_x_d[i], prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g, gas_params, problem_params);
+        //prev_dvel_xg[i] = point_value(prev_x_g[i], prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, dust_params, problem_params);
     }
 
     //Массивы для x,y.BEGIN
@@ -326,9 +328,14 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
         {
             next_drho[i] = found_next_rho(image_dmass, next_x_d, next_image_x_d, i, dust_params, problem_params);
             next_grho[i] = found_next_rho(image_gmass, next_x_g, next_image_x_g, i, dust_params, problem_params);
+        }
 
-            next_drho_xg[i] = point_value_for_rho(next_x_g[i], image_dmass, next_image_x_d, dust_params, problem_params);
-            next_grho_xd[i] = point_value_for_rho(next_x_d[i], image_gmass, next_image_x_g, gas_params, problem_params);
+        for(int i = 0; i < gamount; ++i)
+        {
+            next_grho_xd[i] = near_velocity(next_x_d[i], next_x_g, next_grho, dust_params);
+            next_drho_xg[i] = near_velocity(next_x_g[i], next_x_d, next_drho, gas_params);
+            //next_drho_xg[i] = point_value_for_rho(next_x_g[i], image_dmass, next_image_x_d, dust_params, problem_params);
+            //next_grho_xd[i] = point_value_for_rho(next_x_d[i], image_gmass, next_image_x_g, gas_params, problem_params);
         }
 
         //ищем x, y в точках газа
@@ -391,10 +398,10 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
 
         for(int i = 0; i < gamount; ++i)
         {
-            prev_gvel_xd[i] = point_value(prev_x_d[i], prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g,
-                                          gas_params, problem_params);
-            prev_dvel_xg[i] = point_value(prev_x_g[i], prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d,
-                                          dust_params, problem_params);
+            prev_gvel_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_gvelocity, dust_params);
+            prev_dvel_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_dvelocity, gas_params);
+            //prev_gvel_xd[i] = point_value(prev_x_d[i], prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g, gas_params, problem_params);
+            //prev_dvel_xg[i] = point_value(prev_x_g[i], prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, dust_params, problem_params);
         }
 
         compute_x(prev_x_gas, prev_gvelocity, prev_dvel_xg, gas_params);

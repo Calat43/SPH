@@ -3,8 +3,8 @@
 //начальное распределение плотности пыли
 double ddensity_distribution(double x)
 {
-    return sin(2*pi*x)/100 + 0.011;
-    //return sin(2*pi*x)/100. + 1;
+    //return sin(2*pi*x)/100 + 0.011;
+    return sin(2*pi*x)/100. + 1;
 }
 
 //начальное распределение скорости пыли
