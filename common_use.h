@@ -38,8 +38,8 @@ double found_next_rho(double * image_mass, double * x, double * image_x, int i,
                             ParticleParams particle_params, ProblemParams problem_params);
 
 //x - точка, в которой ищем значение
-double point_value(double x, double * image_function, double * image_mass, double * image_rho, double * image_x,
-                   ParticleParams particle_params, ProblemParams problem_params);
+double point_value(double * x, double * image_function, double * image_mass, double * image_rho, double * image_x, int i,
+                    ParticleParams particle_params, ProblemParams problem_params);
 
-double point_value_for_rho(double x, double * image_mass, double * image_x, ParticleParams particle_params,
+double point_value_for_rho(double x, double * image_mass, double * image_x, int i, ParticleParams particle_params,
                            ProblemParams problem_params);

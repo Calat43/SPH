@@ -13,12 +13,15 @@ double gvelocity_distribution(double x)
 }
 
 //масса газа, находящаяся при постоянной плотности из предположения, что масса всех частиц одинакова
-double found_flat_gmass(double * image_x_g, double density, ParticleParams particle_params, ProblemParams problem_params)
+double found_flat_gmass(double * image_x_g, double density, int i, ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
+    int hN = (int)floor(problem_params.h * amount);
 
     double mass = 0;
-    for (int j = 0; j < 3 * amount - 2; ++j)
+
+    for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+        // for (int j = 0; j < 3 * amount - 2; ++j)
     {
         mass += spline_kernel(image_x_g[amount], image_x_g[j], problem_params);
     }
@@ -26,15 +29,15 @@ double found_flat_gmass(double * image_x_g, double density, ParticleParams parti
 }
 
 //заполнение массива, содержащего массы частиц газа
-void fill_gmass(double * gmass, double * x_g, double * image_x_g, double average_grho,
+void fill_gmass(double * gmass, double * x_g, double * image_x_g, double average_grho, int i,
                 ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
 
-    for(int i = 0; i < amount; ++i)
+    for(int k = 0; k < amount; ++k)
     {
         //gmass[i] = 1/ (double)amount;
-        gmass[i] = gdensity_distribution(x_g[i]) / average_grho * found_flat_gmass(image_x_g, average_grho,
+        gmass[k] = gdensity_distribution(x_g[k]) / average_grho * found_flat_gmass(image_x_g, average_grho, i,
                                                                                    particle_params, problem_params);
     }
 }
@@ -91,7 +94,7 @@ void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params)
     fill_image_x(prev_image_x_g, particle_params);
 
     double average_grho = gdensity_distribution(0);
-    fill_gmass(gmass, prev_x_g, prev_image_x_g, average_grho, particle_params, problem_params);
+    fill_gmass(gmass, prev_x_g, prev_image_x_g, average_grho, 0, particle_params, problem_params);
     fill_image(image_gmass, gmass, particle_params);
 
     fill_initial_rho(prev_grho, image_gmass, prev_x_g, prev_image_x_g, particle_params, problem_params);

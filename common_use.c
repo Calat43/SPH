@@ -50,24 +50,6 @@ double spline_gradient(double x_a, double x_b, ProblemParams params)
     }
 }
 
-double positive_minus()
-{
-    if (1)
-    {
-
-    }
-}
-
-void fill_kernel(double * kernel)
-{
-
-}
-
-void fill_kernel_gradient()
-{
-
-}
-
 double found_next_coordinate(double prev_x, double prev_vel, ProblemParams params)
 {
     return prev_x + params.tau * prev_vel;
@@ -118,10 +100,12 @@ void fill_initial_rho(double * rho, double  * image_mass, double * x, double * i
                        ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
+    int hN = (int)floor(problem_params.h * amount);
 
     for(int i = 0; i < amount; ++i)
     {
-        for (int j = 0; j < 3 * amount - 2; ++j)
+        for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+        //for(int j = 0; j < 3 * amount - 2; ++j)
         {
             rho[i] += image_mass[j] * spline_kernel(x[i], image_x[j], problem_params);
         }
@@ -132,36 +116,42 @@ double found_next_rho(double * image_mass, double * x, double * image_x, int i,
                              ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
+    int hN = (int)floor(problem_params.h * amount);
 
     double rho = 0;
-    for(int j = 0; j < 3 * amount - 2; ++j)
+    for (int j = i + amount - 2*hN - 1; j < i + amount + 2*hN + 1; ++j)
+    //for(int j = 0; j < 3 * amount - 2; ++j)
     {
         rho += image_mass[j] * spline_kernel(x[i], image_x[j], problem_params);
     }
     return rho;
 }
 
-double point_value(double x, double * image_function, double * image_mass, double * image_rho, double * image_x,
+double point_value(double * x, double * image_function, double * image_mass, double * image_rho, double * image_x, int i,
                    ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
     double result = 0;
+    int hN = (int)floor(problem_params.h * amount);
 
-    for (int j = 0; j < 3 * amount - 2; ++j)
+    for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+        //for (int j = 0; j < 3 * amount - 2; ++j)
     {
-        result += image_mass[j] * (image_function[j] / image_rho[j]) * spline_kernel(x, image_x[j], problem_params);
+        result += image_mass[j] * (image_function[j] / image_rho[j]) * spline_kernel(x[i], image_x[j], problem_params);
     }
 
     return result;
 }
 
-double point_value_for_rho(double x, double * image_mass, double * image_x, ParticleParams particle_params,
+double point_value_for_rho(double x, double * image_mass, double * image_x, int i, ParticleParams particle_params,
                            ProblemParams problem_params)
 {
     int amount = particle_params.amount;
     double result = 0;
+    int hN = (int)floor(problem_params.h * amount);
 
-    for(int j = 0; j < 3 * amount - 2; ++j)
+    for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+    //for(int j = 0; j < 3 * amount - 2; ++j)
     {
         result += image_mass[j] * spline_kernel(x, image_x[j], problem_params);
     }

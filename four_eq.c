@@ -1,17 +1,19 @@
 #include "four_eq.h"
 
 double found_next_gvelocity(double x_g, double prev_grho, double prev_gvelocity, double prev_dvelocity,
-                            double * image_gmass, double * prev_image_x_g, double * prev_image_grho,
+                            double * image_gmass, double * prev_image_x_g, double * prev_image_grho, int i,
                             ParticleParams gas_params, ProblemParams problem_params)
 {
     int amount = gas_params.amount;
     double c_s = problem_params.c_s;
     double tau = problem_params.tau;
     double K = problem_params.K;
+    int hN = (int)floor(problem_params.h * amount);
 
     double result = 0;
 
-    for (int j = 0; j < 3 * amount - 2; ++j)
+    for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+    //for (int j = 0; j < 3 * amount - 2; ++j)
     {
         result += image_gmass[j] * pow(c_s, 2) * (1. / prev_image_grho[j] + 1. / prev_grho) *
                   spline_gradient(x_g, prev_image_x_g[j], problem_params);
@@ -65,7 +67,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     fill_image_x(prev_image_x_g, gas_params);
 
     double average_grho = gdensity_distribution(0);
-    fill_gmass(gmass, prev_x_g, prev_image_x_g, average_grho, gas_params, problem_params);
+    fill_gmass(gmass, prev_x_g, prev_image_x_g, average_grho, 0, gas_params, problem_params);
     fill_image(image_gmass, gmass, gas_params);
 
     fill_initial_rho(prev_grho, image_gmass, prev_x_g, prev_image_x_g, gas_params, problem_params);
@@ -100,7 +102,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     fill_image_x(prev_image_x_d, dust_params);
 
     double average_drho = ddensity_distribution(0);
-    fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, dust_params, problem_params);
+    fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, 0, dust_params, problem_params);
     fill_image(image_dmass, dmass, dust_params);
 
     fill_initial_rho(prev_drho, image_dmass, prev_x_d, prev_image_x_d, dust_params, problem_params);
@@ -152,17 +154,17 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
 
         for(int i = 0; i < gamount; ++i)
         {
-            dvelocity = point_value(prev_x_g[i], prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d,
+            dvelocity = point_value(prev_x_g, prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, i,
                                     dust_params, problem_params);
             next_grho[i] = found_next_rho(image_gmass, prev_x_g, prev_image_x_g, i, gas_params, problem_params);
             next_gvelocity[i] = found_next_gvelocity(prev_x_g[i], prev_grho[i], prev_gvelocity[i], dvelocity, image_gmass,
-                                                     prev_image_x_g, prev_image_grho, gas_params, problem_params);
+                                                     prev_image_x_g, prev_image_grho, i, gas_params, problem_params);
             next_x_g[i] = found_next_coordinate(prev_x_g[i], prev_gvelocity[i], problem_params);
         }
 
         for(int i = 0; i < damount; ++i)
         {
-            gvelocity = point_value(prev_x_d[i], prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g,
+            gvelocity = point_value(prev_x_d, prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g, i,
                                     gas_params, problem_params);
             next_drho[i] = found_next_rho(image_dmass, prev_x_d, prev_image_x_d, i, dust_params, problem_params);
             next_dvelocity[i] = found_next_dvelocity(prev_drho[i], prev_dvelocity[i], gvelocity, problem_params);

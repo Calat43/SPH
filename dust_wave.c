@@ -14,12 +14,15 @@ double dvelocity_distribution(double x)
 }
 
 //масса пыли, находящаяся при постоянной плотности из предположения, что масса всех частиц одинакова
-double found_flat_dmass(double * image_x_d, double density, ParticleParams particle_params, ProblemParams problem_params)
+double found_flat_dmass(double * image_x_d, double density, int i, ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
 
     double mass = 0;
-    for (int j = 0; j < 3 * amount - 2; ++j)
+    int hN = (int)floor(problem_params.h * amount);
+
+    for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+    //for (int j = 0; j < 3 * amount - 2; ++j)
     {
         mass += spline_kernel(image_x_d[amount], image_x_d[j], problem_params);
     }
@@ -27,15 +30,15 @@ double found_flat_dmass(double * image_x_d, double density, ParticleParams parti
 }
 
 //заполнение массива, содержащего массы частиц пыли
-void fill_dmass(double * dmass, double * x_d, double * image_x_d, double average_drho,
+void fill_dmass(double * dmass, double * x_d, double * image_x_d, double average_drho, int i,
                 ParticleParams particle_params, ProblemParams problem_params)
 {
     double amount = particle_params.amount;
 
-    for(int i = 0; i < amount; ++i)
+    for(int k = 0; k < amount; ++k)
     {
         //gmass[i] = 1/ (double)amount;
-        dmass[i] = ddensity_distribution(x_d[i]) / average_drho * found_flat_dmass(image_x_d, average_drho,
+        dmass[k] = ddensity_distribution(x_d[k]) / average_drho * found_flat_dmass(image_x_d, average_drho, i,
                                                                                    particle_params, problem_params);
     }
 }
@@ -82,7 +85,7 @@ void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params
     fill_image_x(prev_image_x_d, particle_params);
 
     double average_drho = ddensity_distribution(0);
-    fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, particle_params, problem_params);
+    fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, 0, particle_params, problem_params);
     fill_image(image_dmass, dmass, particle_params);
 
     fill_initial_rho(prev_drho, image_dmass, prev_x_d, prev_image_x_d, particle_params, problem_params);
