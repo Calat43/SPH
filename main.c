@@ -1,3 +1,4 @@
+#include <time.h>
 #include "common_use.h"
 #include "gas_stair.h"
 #include "gas_wave.h"
@@ -8,10 +9,12 @@
 
 int main()
 {
+    clock_t startTime = clock();
+
     ProblemParams problem_params;
     problem_params.T = 0.5;
-    problem_params.h = 0.005;
-    problem_params.tau = 0.001;
+    problem_params.h = 0.07;
+    problem_params.tau = 0.0001;
     problem_params.c_s = 1;
     problem_params.K = 500;
 
@@ -21,12 +24,12 @@ int main()
     gs_particle.right = 1;
 
     ParticleParams dw_particle;
-    dw_particle.amount = 400;
+    dw_particle.amount = 10000;
     dw_particle.left = 0;
     dw_particle.right = 1;
 
     ParticleParams gw_particle;
-    gw_particle.amount = 400;
+    gw_particle.amount = 10000;
     gw_particle.left = 0;
     gw_particle.right = 1;
 
@@ -57,6 +60,11 @@ int main()
     whole_system(gw_particle, dw_particle, problem_params);
 
     //xy_system(gw_particle, dw_particle, problem_params);
+
+    clock_t finishTime = clock();
+
+    double executionTime = (double)(finishTime - startTime) / CLOCKS_PER_SEC;
+    printf("Finished in %lf seconds.\n", executionTime);
 
     return 0;
 }

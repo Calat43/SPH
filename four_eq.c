@@ -112,14 +112,25 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     fill_image(prev_image_dvelocity, prev_dvelocity, dust_params);
     //Блок массивов для пыли.END
 
+    char fileName[512];
+
+    sprintf(fileName, "/home/calat/CLionProjects/particles/explicit_h=%lf_tau=%lf_T=%lf_K=%lf.dat", problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
+    FILE * explicit_0 = fopen(fileName, "w");
+    for (int i = 0; i < gamount; ++i)
+    {
+        fprintf(explicit_0, "%lf %lf %lf %lf %lf\n", prev_x_g[i], prev_dvelocity[i], prev_gvelocity[i], prev_drho[i], prev_grho[i]);
+    }
+    fclose(explicit_0);
+
     double dvelocity;
     double gvelocity;
-    char fileName[512];
+
     for (int frameId = 0; frameId < floor(T / tau); ++frameId)
     {
+        printf("%d\n", frameId);
         dvelocity = 0;
         gvelocity = 0;
-
+/*
         sprintf(fileName, "/home/calat/CLionProjects/particles/grho/grho_%d.dat", frameId);
         FILE * grho_frame = fopen(fileName, "w");
         for (int i = 0; i < gamount; ++i)
@@ -151,7 +162,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
             fprintf(dvelocity_frame, "%lf %0.15lf\n", prev_x_d[i], prev_dvelocity[i]);
         }
         fclose(dvelocity_frame);
-
+*/
         for(int i = 0; i < gamount; ++i)
         {
             dvelocity = point_value(prev_x_g, prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, i,
@@ -219,5 +230,14 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
 
         }
     }
+
+    sprintf(fileName, "/home/calat/CLionProjects/particles/explicit_T_h=%lf_tau=%lf_T=%lf_K=%lf.dat", problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
+    FILE * explicit_T = fopen(fileName, "w");
+    for (int i = 0; i < gamount; ++i)
+    {
+        fprintf(explicit_T, "%lf %lf %lf %lf %lf\n", prev_x_g[i], prev_dvelocity[i], prev_gvelocity[i], prev_drho[i], prev_grho[i]);
+    }
+    fclose(explicit_T);
+    printf("----");
 
 }
