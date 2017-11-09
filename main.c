@@ -13,7 +13,7 @@ int main()
 
     ProblemParams problem_params;
     problem_params.T = 0.5;
-    problem_params.h = 0.07;
+    problem_params.h = 0.05;
     problem_params.tau = 0.0001;
     problem_params.c_s = 1;
     problem_params.K = 500;
