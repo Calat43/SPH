@@ -1,5 +1,10 @@
 #include "xy_system.h"
 
+double dust_vel(double x, double t, double d2g)
+{
+    return d2g * sin((x + t)/2.*pi);
+}
+
 //заполнение массива x, опирающееся на предположение о том, что начальные данные заданы в одних и тех же точках
 void compute_x(double * x, double * gvelocity, double * dvelocity, ParticleParams params)
 {
@@ -153,7 +158,7 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
     coordinate_distribution(prev_x_d, dust_params);
     fill_image_x(prev_image_x_d, dust_params);
 
-    double average_drho = ddensity_distribution(0);
+    double average_drho = ddensity_distribution(0, problem_params.d2g);
     fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, 0, dust_params, problem_params);
     fill_image(image_dmass, dmass, dust_params);
 
@@ -176,15 +181,16 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
 
     for(int i = 0; i < gamount; ++i)
     {
-        prev_grho_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_grho, dust_params);
-        prev_drho_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_drho, gas_params);
-        //prev_drho_xg[i] = point_value_for_rho(prev_x_g[i], image_dmass, prev_image_x_d, dust_params, problem_params);
-        //prev_grho_xd[i] = point_value_for_rho(prev_x_d[i], image_gmass, prev_image_x_g, gas_params, problem_params);
+        //prev_grho_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_grho, dust_params);
+        //prev_drho_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_drho, gas_params);
+        prev_drho_xg[i] = point_value_for_rho(prev_x_g[i], image_dmass, prev_image_x_d, i, dust_params, problem_params);
+        prev_grho_xd[i] = point_value_for_rho(prev_x_d[i], image_gmass, prev_image_x_g, i, gas_params, problem_params);
 
-        prev_gvel_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_gvelocity, dust_params);
-        prev_dvel_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_dvelocity, gas_params);
-        //prev_gvel_xd[i] = point_value(prev_x_d[i], prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g, gas_params, problem_params);
-        //prev_dvel_xg[i] = point_value(prev_x_g[i], prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, dust_params, problem_params);
+        //prev_gvel_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_gvelocity, dust_params);
+        //prev_dvel_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_dvelocity, gas_params);
+        //prev_gvel_xd[i] = dust_vel(prev_x_d[i], 0, problem_params.d2g);
+        prev_gvel_xd[i] = point_value(prev_x_d, prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g, i, gas_params, problem_params);
+        prev_dvel_xg[i] = point_value(prev_x_g, prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, i, dust_params, problem_params);
     }
 
     //Массивы для x,y.BEGIN
@@ -207,18 +213,18 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
     compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params);
     //Массивы для x,y.END
 
-
-    FILE * fout = fopen("/home/calat/CLionProjects/particles/output.txt", "w");
+/*
+    FILE * fout = fopen("/home/calat/CLionProjects/particles/vg_in_xg_vg_in_xd_T0.dat", "w");
 
     for(int i = 0; i < gamount; ++i)
     {
-        fprintf(fout, "%lf\n", prev_dvelocity[i] - prev_dvel_xg[i]);
+        fprintf(fout, "%lf %lf %lf %lf\n", prev_x_g[i], prev_grho[i], prev_x_d[i], prev_grho_xd[i]);
     }
 
-
+*/
     char fileName[512];
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/xy_h=%lf_tau=%lf_T=%lf_K=%lf.dat", problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
+    sprintf(fileName, "/home/calat/CLionProjects/particles/sm_xy_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_N%d.dat", problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * xy_0 = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
     {
@@ -329,7 +335,6 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
         fclose(ydust_frame);
 */
 
-
         for(int i = 0; i < gamount; ++i)
         {
             next_x_d[i] = found_next_coordinate(prev_x_d[i], prev_dvelocity[i], problem_params);
@@ -348,10 +353,10 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
 
         for(int i = 0; i < gamount; ++i)
         {
-            next_grho_xd[i] = near_velocity(next_x_d[i], next_x_g, next_grho, dust_params);
-            next_drho_xg[i] = near_velocity(next_x_g[i], next_x_d, next_drho, gas_params);
-            //next_drho_xg[i] = point_value_for_rho(next_x_g[i], image_dmass, next_image_x_d, dust_params, problem_params);
-            //next_grho_xd[i] = point_value_for_rho(next_x_d[i], image_gmass, next_image_x_g, gas_params, problem_params);
+            //next_grho_xd[i] = near_velocity(next_x_d[i], next_x_g, next_grho, dust_params);
+            //next_drho_xg[i] = near_velocity(next_x_g[i], next_x_d, next_drho, gas_params);
+            next_drho_xg[i] = point_value_for_rho(next_x_g[i], image_dmass, next_image_x_d, i, dust_params, problem_params);
+            next_grho_xd[i] = point_value_for_rho(next_x_d[i], image_gmass, next_image_x_g, i, gas_params, problem_params);
         }
 
         //ищем x, y в точках газа
@@ -414,10 +419,11 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
 
         for(int i = 0; i < gamount; ++i)
         {
-            prev_gvel_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_gvelocity, dust_params);
-            prev_dvel_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_dvelocity, gas_params);
-            //prev_gvel_xd[i] = point_value(prev_x_d[i], prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g, gas_params, problem_params);
-            //prev_dvel_xg[i] = point_value(prev_x_g[i], prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, dust_params, problem_params);
+            //prev_gvel_xd[i] = near_velocity(prev_x_d[i], prev_x_g, prev_gvelocity, dust_params);
+            //prev_dvel_xg[i] = near_velocity(prev_x_g[i], prev_x_d, prev_dvelocity, gas_params);
+            //prev_gvel_xd[i] = dust_vel(prev_x_d[i], tau * frameId, problem_params.d2g);
+            prev_gvel_xd[i] = point_value(prev_x_d, prev_image_gvelocity, image_gmass, prev_image_grho, prev_image_x_g, i, gas_params, problem_params);
+            prev_dvel_xg[i] = point_value(prev_x_g, prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, i, dust_params, problem_params);
         }
 
         compute_x(prev_x_gas, prev_gvelocity, prev_dvel_xg, gas_params);
@@ -427,12 +433,11 @@ void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemPar
         compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params);
     }
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/xy_T_h=%lf_tau=%lf_T=%lf_K=%lf.dat", problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
+    sprintf(fileName, "/home/calat/CLionProjects/particles/sm_xy_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_N=%d.dat", problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * xy_T = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
     {
         fprintf(xy_T, "%lf %lf %lf %lf %lf\n", prev_x_g[i], prev_dvelocity[i], prev_gvelocity[i], prev_drho[i], prev_grho[i]);
     }
     fclose(xy_T);
-
 }

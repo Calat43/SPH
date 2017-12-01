@@ -17,6 +17,7 @@ typedef struct _problemParams{
     double tau;
     double c_s;
     double K;
+    double d2g;
 } ProblemParams;
 
 double spline_kernel(double x_a, double x_b, ProblemParams params);

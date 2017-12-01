@@ -3,13 +3,13 @@
 //начальное распределение плотности газа
 double gdensity_distribution(double x)
 {
-    return sin(2*pi*x)/100. + 1;
+    return sin(2*pi*x)/10000. + 1;
 }
 
 //начальное распределение скорости газа
 double gvelocity_distribution(double x)
 {
-    return sin(2.*pi*x)/100.;
+    return sin(2.*pi*x)/10000.;
 }
 
 //масса газа, находящаяся при постоянной плотности из предположения, что масса всех частиц одинакова

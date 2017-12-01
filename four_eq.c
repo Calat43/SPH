@@ -101,7 +101,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     coordinate_distribution(prev_x_d, dust_params);
     fill_image_x(prev_image_x_d, dust_params);
 
-    double average_drho = ddensity_distribution(0);
+    double average_drho = ddensity_distribution(0, problem_params.d2g);
     fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, 0, dust_params, problem_params);
     fill_image(image_dmass, dmass, dust_params);
 
@@ -114,7 +114,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
 
     char fileName[512];
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/explicit_h=%lf_tau=%lf_T=%lf_K=%lf.dat", problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
+    sprintf(fileName, "/home/calat/CLionProjects/particles/explicit_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_N=%d.dat", problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * explicit_0 = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
     {
@@ -162,7 +162,18 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
             fprintf(dvelocity_frame, "%lf %0.15lf\n", prev_x_d[i], prev_dvelocity[i]);
         }
         fclose(dvelocity_frame);
-*/
+
+  */
+
+        sprintf(fileName, "/home/calat/CLionProjects/particles/explicit/explicit_%d.dat", frameId);
+        FILE * explicit = fopen(fileName, "w");
+        for (int i = 0; i < gamount; ++i)
+        {
+            fprintf(explicit, "%lf %lf %lf %lf %lf\n", prev_x_g[i], prev_dvelocity[i], prev_gvelocity[i], prev_drho[i], prev_grho[i]);
+        }
+        fclose(explicit);
+
+
         for(int i = 0; i < gamount; ++i)
         {
             dvelocity = point_value(prev_x_g, prev_image_dvelocity, image_dmass, prev_image_drho, prev_image_x_d, i,
@@ -231,7 +242,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
         }
     }
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/explicit_T_h=%lf_tau=%lf_T=%lf_K=%lf.dat", problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
+    sprintf(fileName, "/home/calat/CLionProjects/particles/explicit_d2g=%lf_T_h=%lf_tau=%lf_T=%lf_K=%lf_N=%d.dat", problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * explicit_T = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
     {
