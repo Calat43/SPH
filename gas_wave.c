@@ -1,15 +1,15 @@
 #include "gas_wave.h"
 
 //начальное распределение плотности газа
-double gdensity_distribution(double x)
+double gdensity_distribution(double x, ProblemParams params)
 {
-    return sin(2*pi*x)/10000. + 1;
+    return params.delta * sin(2*pi*x) + params.middle_rho_gas;
 }
 
 //начальное распределение скорости газа
-double gvelocity_distribution(double x)
+double gvelocity_distribution(double x, ProblemParams params)
 {
-    return sin(2.*pi*x)/10000.;
+    return params.delta * sin(2.*pi*x);
 }
 
 //масса газа, находящаяся при постоянной плотности из предположения, что масса всех частиц одинакова
@@ -20,8 +20,8 @@ double found_flat_gmass(double * image_x_g, double density, int i, ParticleParam
 
     double mass = 0;
 
-    for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
-        // for (int j = 0; j < 3 * amount - 2; ++j)
+    //for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+    for (int j = 0; j < 3 * amount - 2; ++j)
     {
         mass += spline_kernel(image_x_g[amount], image_x_g[j], problem_params);
     }
@@ -37,16 +37,16 @@ void fill_gmass(double * gmass, double * x_g, double * image_x_g, double average
     for(int k = 0; k < amount; ++k)
     {
         //gmass[i] = 1/ (double)amount;
-        gmass[k] = gdensity_distribution(x_g[k]) / average_grho * found_flat_gmass(image_x_g, average_grho, i,
-                                                                                   particle_params, problem_params);
+        gmass[k] = gdensity_distribution(x_g[k], problem_params) / average_grho *
+                   found_flat_gmass(image_x_g, average_grho, i, particle_params, problem_params);
     }
 }
 
-void fill_initial_gvelocity(double * gvelocity, double * x_g, ParticleParams params)
+void fill_initial_gvelocity(double * gvelocity, double * x_g, ParticleParams particleParams, ProblemParams problemParams)
 {
-    for (int i = 0; i < params.amount; ++i)
+    for (int i = 0; i < particleParams.amount; ++i)
     {
-        gvelocity[i] = gvelocity_distribution(x_g[i]);
+        gvelocity[i] = gvelocity_distribution(x_g[i], problemParams);
     }
 }
 
@@ -90,15 +90,17 @@ void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params)
     double prev_image_grho[3*amount - 2];
     double next_image_grho[3*amount - 2];
 
-    coordinate_distribution(prev_x_g, particle_params);
-    fill_image_x(prev_image_x_g, particle_params);
+    //coordinate_distribution(prev_x_g, particle_params);
+    //fill_image_x(prev_image_x_g, particle_params);
+    fill_x(prev_x_g, problem_params, particle_params);
+    fill_image_x(prev_image_x_g, prev_x_g, particle_params);
 
-    double average_grho = gdensity_distribution(0);
+    double average_grho = gdensity_distribution(0, problem_params);
     fill_gmass(gmass, prev_x_g, prev_image_x_g, average_grho, 0, particle_params, problem_params);
     fill_image(image_gmass, gmass, particle_params);
 
     fill_initial_rho(prev_grho, image_gmass, prev_x_g, prev_image_x_g, particle_params, problem_params);
-    fill_initial_gvelocity(prev_gvelocity, prev_x_g, particle_params);
+    fill_initial_gvelocity(prev_gvelocity, prev_x_g, particle_params, problem_params);
 
     fill_image(prev_image_grho, prev_grho, particle_params);
     fill_image(prev_image_gvelocity, prev_gvelocity, particle_params);

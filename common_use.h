@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 extern const double pi;
 
@@ -9,6 +10,7 @@ typedef struct _particleParams{
     int amount;
     double left;
     double right;
+    bool isGas;
 } ParticleParams;
 
 typedef struct _problemParams{
@@ -18,6 +20,8 @@ typedef struct _problemParams{
     double c_s;
     double K;
     double d2g;
+    double middle_rho_gas;
+    double delta;
 } ProblemParams;
 
 double spline_kernel(double x_a, double x_b, ProblemParams params);
@@ -26,11 +30,17 @@ double spline_gradient(double x_a, double x_b, ProblemParams params);
 
 double found_next_coordinate(double prev_x, double prev_vel, ProblemParams params);
 
-void coordinate_distribution(double * x_d, ParticleParams params);
+//void coordinate_distribution(double * x_d, ParticleParams params);
 
-double fill_image_x(double * image_x, ParticleParams params);
+//void fill_image_x(double * image_x, ParticleParams params);
+
+void fill_x(double * coord, ProblemParams problemParams, ParticleParams particleParams);
+
+void fill_image_x(double * image_coord, double * coord, ParticleParams params);
 
 void fill_image(double * image, double * real, ParticleParams params);
+
+void fill_mass(double * mass, ParticleParams params, ProblemParams problemParams);
 
 void fill_initial_rho(double * rho, double  * image_mass, double * x, double * image_x,
                       ParticleParams particle_params, ProblemParams problem_params);
@@ -39,8 +49,8 @@ double found_next_rho(double * image_mass, double * x, double * image_x, int i,
                             ParticleParams particle_params, ProblemParams problem_params);
 
 //x - точка, в которой ищем значение
-double point_value(double * x, double * image_function, double * image_mass, double * image_rho, double * image_x, int i,
+double interpolation_value(double * x, double * image_function, double * image_mass, double * image_rho, double * image_x, int i,
                     ParticleParams particle_params, ProblemParams problem_params);
 
-double point_value_for_rho(double x, double * image_mass, double * image_x, int i, ParticleParams particle_params,
+double interpolation_value_for_rho(double x, double * image_mass, double * image_x, int i, ParticleParams particle_params,
                            ProblemParams problem_params);

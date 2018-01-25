@@ -9,5 +9,7 @@
 #include "gas_wave.h"
 #include "dust_wave.h"
 
-void xy_system(ParticleParams gas_params, ParticleParams dust_params, ProblemParams problem_params);
+void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams problem_params);
+
+void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams problem_params);
 

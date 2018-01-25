@@ -10,10 +10,11 @@
 void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params);
 
 //начальное распределение плотности газа
-double gdensity_distribution(double x);
+double gdensity_distribution(double x, ProblemParams params);
 
 //заполнение массива, содержащего массы частиц газа
 void fill_gmass(double * gmass, double * x_g, double * image_x_g, double average_grho, int i,
                 ParticleParams particle_params, ProblemParams problem_params);
 
-void fill_initial_gvelocity(double * gvelocity, double * x_g, ParticleParams params);
+void fill_initial_gvelocity(double * gvelocity, double * x_g, ParticleParams particleParams,
+                            ProblemParams problemParams);

@@ -1,4 +1,5 @@
 #include <time.h>
+#include <assert.h>
 #include "common_use.h"
 #include "gas_stair.h"
 #include "gas_wave.h"
@@ -48,9 +49,10 @@ void solve_problem(ParticleParams dw_particle, ParticleParams gw_particle, Probl
     //stair_gas_print(gs_particle, problem_params);
     //only_dust_wave(dw_particle, problem_params);
     //only_gas_wave(gw_particle, problem_params);
-    whole_system(gw_particle, dw_particle, problem_params);
+    //whole_system(gw_particle, dw_particle, problem_params);
 
-    //xy_system(gw_particle, dw_particle, problem_params);
+    near(gw_particle, dw_particle, problem_params);
+    //smooth(gw_particle, dw_particle, problem_params);
 
     clock_t finishTime = clock();
 
@@ -62,21 +64,27 @@ int main()
 {
     ProblemParams problem_params;
     problem_params.T = 0.5;
-    problem_params.h = 0.025;
-    problem_params.tau = 0.0025;
+    problem_params.h = 0.05;
+    problem_params.tau = 0.005;
     problem_params.c_s = 1;
-    problem_params.K = 0;
+    problem_params.K = 5;
     problem_params.d2g = 0.01;
+    problem_params.middle_rho_gas = 1;
+    problem_params.delta = 1. / 100;
 
+    //параметры пыли
     ParticleParams dw_particle;
-    dw_particle.amount = 100;
+    dw_particle.amount = 400;
     dw_particle.left = 0;
     dw_particle.right = 1;
+    dw_particle.isGas = false;
 
+    //параметры газа
     ParticleParams gw_particle;
-    gw_particle.amount = 100;
+    gw_particle.amount = 200;
     gw_particle.left = 0;
     gw_particle.right = 1;
+    gw_particle.isGas = true;
 
 
     FILE * paramsFile = fopen("problem_params.txt", "r");
@@ -84,7 +92,7 @@ int main()
     {
         int params_read = fscanf(
                 paramsFile,
-                "%lf %lf %lf %lf %d %d",
+                "%lf %lf %lf %lf",
                 &(problem_params.d2g),
                 &(problem_params.K),
                 &(problem_params.h),
@@ -95,7 +103,8 @@ int main()
         }
 
         solve_problem(dw_particle, gw_particle, problem_params);
-    }
+   }
+
 
     return 0;
 }

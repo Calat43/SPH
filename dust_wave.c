@@ -1,17 +1,17 @@
 #include "dust_wave.h"
 
 //начальное распределение плотности пыли
-double ddensity_distribution(double x, double d2g)
+double ddensity_distribution(double x, ProblemParams params)
 {
-    return sin(2*pi*x)/10000. + d2g;
+    return params.delta * sin(2*pi*x) + params.d2g;
     //return sin(2*pi*x)/100. + 1;
     //return sin(2*pi*x)/100 + 0.011;
 }
 
 //начальное распределение скорости пыли
-double dvelocity_distribution(double x)
+double dvelocity_distribution(double x, ProblemParams params)
 {
-    return sin(2.*pi*x)/10000.;
+    return params.delta * sin(2.*pi*x);
 }
 
 //масса пыли, находящаяся при постоянной плотности из предположения, что масса всех частиц одинакова
@@ -22,8 +22,8 @@ double found_flat_dmass(double * image_x_d, double density, int i, ParticleParam
     double mass = 0;
     int hN = (int)floor(problem_params.h * amount);
 
-    for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
-    //for (int j = 0; j < 3 * amount - 2; ++j)
+    //for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+    for (int j = 0; j < 3 * amount - 2; ++j)
     {
         mass += spline_kernel(image_x_d[amount], image_x_d[j], problem_params);
     }
@@ -39,16 +39,16 @@ void fill_dmass(double * dmass, double * x_d, double * image_x_d, double average
     for(int k = 0; k < amount; ++k)
     {
         //gmass[i] = 1/ (double)amount;
-        dmass[k] = ddensity_distribution(x_d[k], problem_params.d2g) / average_drho * found_flat_dmass(image_x_d, average_drho, i,
+        dmass[k] = ddensity_distribution(x_d[k], problem_params) / average_drho * found_flat_dmass(image_x_d, average_drho, i,
                                                                                    particle_params, problem_params);
     }
 }
 
-void fill_initial_dvelocity(double * dvelocity, double * x_d, ParticleParams params)
+void fill_initial_dvelocity(double * dvelocity, double * x_d, ParticleParams particleParams, ProblemParams problemParams)
 {
-    for (int i = 0; i < params.amount; ++i)
+    for (int i = 0; i < particleParams.amount; ++i)
     {
-        dvelocity[i] = dvelocity_distribution(x_d[i]);
+        dvelocity[i] = dvelocity_distribution(x_d[i], problemParams);
     }
 }
 
@@ -82,15 +82,17 @@ void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params
     double prev_image_drho[3 * amount - 2];
     double next_image_drho[3 * amount - 2];
 
-    coordinate_distribution(prev_x_d, particle_params);
-    fill_image_x(prev_image_x_d, particle_params);
+    //coordinate_distribution(prev_x_d, particle_params);
+    //fill_image_x(prev_image_x_d, particle_params);
+    fill_x(prev_x_d, problem_params, particle_params);
+    fill_image_x(prev_image_x_d, prev_x_d, particle_params);
 
-    double average_drho = ddensity_distribution(0, problem_params.d2g);
+    double average_drho = ddensity_distribution(0, problem_params);
     fill_dmass(dmass, prev_x_d, prev_image_x_d, average_drho, 0, particle_params, problem_params);
     fill_image(image_dmass, dmass, particle_params);
 
     fill_initial_rho(prev_drho, image_dmass, prev_x_d, prev_image_x_d, particle_params, problem_params);
-    fill_initial_dvelocity(prev_dvelocity, prev_x_d, particle_params);
+    fill_initial_dvelocity(prev_dvelocity, prev_x_d, particle_params, problem_params);
 
     fill_image(prev_image_drho, prev_drho, particle_params);
     fill_image(prev_image_dvelocity, prev_dvelocity, particle_params);

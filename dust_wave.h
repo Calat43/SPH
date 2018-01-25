@@ -10,10 +10,11 @@
 void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params);
 
 //начальное распределение плотности пыли
-double ddensity_distribution(double x, double d2g);
+double ddensity_distribution(double x, ProblemParams params);
 
 //заполнение массива, содержащего массы частиц пыли
 void fill_dmass(double * dmass, double * x_d, double * image_x_d, double average_drho, int i,
                 ParticleParams particle_params, ProblemParams problem_params);
 
-void fill_initial_dvelocity(double * dvelocity, double * x_d, ParticleParams params);
+void fill_initial_dvelocity(double * dvelocity, double * x_d, ParticleParams particleParams,
+                            ProblemParams problemParams);

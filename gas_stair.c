@@ -61,6 +61,7 @@ void stair_fill_initial_grho(double * grho, double  * gmass, double * x_g, Parti
 
     for(int i = 0; i < amount; ++i)
     {
+        grho[i] = 0;
         for (int j = 0; j < amount; ++j)
         {
             grho[i] += gmass[j] * spline_kernel(x_g[i], x_g[j], problem_params);
