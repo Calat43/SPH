@@ -1,7 +1,7 @@
 #include <assert.h>
 #include "four_eq.h"
 
-double found_next_gvelocity(double x_g, double prev_grho, double prev_gvelocity, double prev_dvelocity,
+static double found_next_gvelocity(double x_g, double prev_grho, double prev_gvelocity, double prev_dvelocity,
                             double * image_gmass, double * prev_image_x_g, double * prev_image_grho, int i,
                             ParticleParams gas_params, ProblemParams problem_params)
 {
@@ -26,7 +26,7 @@ double found_next_gvelocity(double x_g, double prev_grho, double prev_gvelocity,
     return result;
 }
 
-double found_next_dvelocity(double prev_drho, double prev_dvelocity, double prev_gvelocity, ProblemParams params)
+static double found_next_dvelocity(double prev_drho, double prev_dvelocity, double prev_gvelocity, ProblemParams params)
 {
     double tau = params.tau;
     double K = params.K;
@@ -199,7 +199,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     char fileName[512];
 
     /*
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+    sprintf(fileName, "%s/explicit_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * explicit_gas_0 = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
@@ -208,7 +208,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     }
     fclose(explicit_gas_0);
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+    sprintf(fileName, "%s/explicit_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
     FILE * explicit_dust_0 = fopen(fileName, "w");
     for (int i = 0; i < damount; ++i)
@@ -218,7 +218,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     fclose(explicit_dust_0);
 */
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+    sprintf(fileName, "%s/explicit_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
 
     FILE * explicit_imgas_0 = fopen(fileName, "w");
@@ -228,7 +228,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     }
     fclose(explicit_imgas_0);
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+    sprintf(fileName, "%s/explicit_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
     FILE * explicit_imdust_0 = fopen(fileName, "w");
     for (int j = 0; j < 3 * damount - 2; ++j)
@@ -242,7 +242,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
         printf("%d\n", frameId);
 
         /*
-        sprintf(fileName, "/home/calat/CLionProjects/particles/differ/gas/expl_gas_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+        sprintf(fileName, "%s/gas/expl_gas_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
                 frameId, problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
         FILE * xy_gas_frame = fopen(fileName, "w");
         for (int j = 0; j < 3 * gamount - 2; ++j)
@@ -251,7 +251,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
         }
         fclose(xy_gas_frame);
 
-        sprintf(fileName, "/home/calat/CLionProjects/particles/differ/dust/expl_dust_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+        sprintf(fileName, "%s/dust/expl_dust_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
                 frameId, problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
         FILE * xy_dust_frame = fopen(fileName, "w");
         for (int j = 0; j < 3 * damount - 2; ++j)
@@ -349,7 +349,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     }
 
     /*
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+    sprintf(fileName, "%s/explicit_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * explicit_gas_T = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
@@ -357,7 +357,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
         fprintf(explicit_gas_T, "%lf %lf %lf\n", prev_x_g[i], prev_gvelocity[i], prev_grho[i]);
     }
     fclose(explicit_gas_T);
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+    sprintf(fileName, "%s/explicit_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
     FILE * explicit_dust_T = fopen(fileName, "w");
     for (int i = 0; i < damount; ++i)
@@ -366,7 +366,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
     }
     fclose(explicit_dust_T);
 */
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+    sprintf(fileName, "%s/explicit_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * explicit_imgas_T = fopen(fileName, "w");
     for (int j = 0; j < 3 * gamount - 2; ++j)
@@ -374,7 +374,7 @@ void whole_system(ParticleParams gas_params, ParticleParams dust_params, Problem
         fprintf(explicit_imgas_T, "%lf %lf %lf\n", prev_image_x_g[j], prev_image_gvelocity[j], prev_image_grho[j]);
     }
     fclose(explicit_imgas_T);
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/explicit_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+    sprintf(fileName, "%s/explicit_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
     FILE * explicit_imdust_T = fopen(fileName, "w");
     for (int j = 0; j < 3 * damount - 2; ++j)

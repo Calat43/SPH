@@ -4,6 +4,10 @@
 
 const double pi = 3.14159265358;
 
+const char * DATA_DIR = "/home/calat/CLionProjects/particles/differ";
+
+const char * PROBLEM_PARAMS_FILE = "/home/calat/CLionProjects/particles/problem_params.txt";
+
 double spline_kernel(double x_a, double x_b, ProblemParams params)
 {
     double h = params.h;

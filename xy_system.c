@@ -77,13 +77,13 @@ double found_next_y(double prev_y, double * image_gmass, double * prev_image_grh
     return result;
 }
 
-double found_next_dvelocity(double next_x, double next_y, ProblemParams params)
+static double found_next_dvelocity(double next_x, double next_y, ProblemParams params)
 {
     double d2g = params.d2g;
     return (next_y - next_x) / (1. + d2g);
 }
 
-double found_next_gvelocity(double next_x, double next_y, ProblemParams params)
+static double found_next_gvelocity(double next_x, double next_y, ProblemParams params)
 {
     double d2g = params.d2g;
     return (next_y + d2g * next_x)  / (1 + d2g);
@@ -414,7 +414,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
 
     char fileName[512];
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/xy_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat",
+    sprintf(fileName, "%s/xy_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
     FILE * xy_gas_0 = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
@@ -423,7 +423,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
     }
     fclose(xy_gas_0);
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/xy_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat",
+    sprintf(fileName, "%s/xy_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
     FILE * xy_dust_0 = fopen(fileName, "w");
     for (int i = 0; i < damount; ++i)
@@ -437,7 +437,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
         printf("%d\n", frameId);
 
 /*
-        sprintf(fileName, "/home/calat/CLionProjects/particles/differ/gas/xy_gas_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+        sprintf(fileName, "%s/gas/xy_gas_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
                 frameId, problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
         FILE * xy_gas_frame = fopen(fileName, "w");
         for (int j = 0; j < 3 * gamount - 2; ++j)
@@ -446,7 +446,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
         }
         fclose(xy_gas_frame);
 
-        sprintf(fileName, "/home/calat/CLionProjects/particles/differ/dust/xy_dust_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+        sprintf(fileName, "%s/dust/xy_dust_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
                 frameId, problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
         FILE * xy_dust_frame = fopen(fileName, "w");
         for (int j = 0; j < 3 * damount - 2; ++j)
@@ -603,7 +603,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
         compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params, problem_params);
     }
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/xy_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat",
+    sprintf(fileName, "%s/xy_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
     FILE * xy_gas_T = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
@@ -612,7 +612,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
     }
     fclose(xy_gas_T);
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/xy_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat",
+    sprintf(fileName, "%s/xy_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K);
     FILE * xy_dust_T = fopen(fileName, "w");
     for (int i = 0; i < damount; ++i)
@@ -821,7 +821,7 @@ void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams
 
     char fileName[512];
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/sm_xy_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+    sprintf(fileName, "%s/sm_xy_gas_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * xy_gas_0 = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
@@ -830,7 +830,7 @@ void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams
     }
     fclose(xy_gas_0);
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/sm_xy_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+    sprintf(fileName, "%s/sm_xy_dust_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
     FILE * xy_dust_0 = fopen(fileName, "w");
     for (int i = 0; i < damount; ++i)
@@ -963,7 +963,7 @@ void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams
         compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params);
     }
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/sm_xy_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
+    sprintf(fileName, "%s/sm_xy_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
     FILE * xy_gas_T = fopen(fileName, "w");
     for (int i = 0; i < gamount; ++i)
@@ -972,7 +972,7 @@ void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams
     }
     fclose(xy_gas_T);
 
-    sprintf(fileName, "/home/calat/CLionProjects/particles/differ/sm_xy_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
+    sprintf(fileName, "%s/sm_xy_dust_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat", DATA_DIR,
             problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
     FILE * xy_dust_T = fopen(fileName, "w");
     for (int i = 0; i < damount; ++i)

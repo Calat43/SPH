@@ -1,5 +1,8 @@
 #include <time.h>
 #include <assert.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <string.h>
 #include "common_use.h"
 #include "gas_stair.h"
 #include "gas_wave.h"
@@ -87,8 +90,17 @@ int main()
     gw_particle.right = 1;
     gw_particle.isGas = true;
 
+    // Create DATA_DIR if not exists
+    struct stat st;
+    if (stat(DATA_DIR, &st) == -1) {
+        mkdir(DATA_DIR, 0700);
+    }
 
-    FILE * paramsFile = fopen("problem_params.txt", "r");
+    FILE * paramsFile = fopen(PROBLEM_PARAMS_FILE, "r");
+    if (paramsFile == NULL) {
+        printf(stderr, "Error opening file: %s\n", strerror( errno ));
+        return errno;
+    }
     while (true)
     {
         int params_read = fscanf(

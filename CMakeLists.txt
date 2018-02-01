@@ -14,6 +14,8 @@ set(SOURCE_FILES
         fscanf.c
         fscanf.h
         four_eq.c
-        four_eq.h)
+        four_eq.h
+        xy_system.c
+        xy_system.h)
 add_executable(particles ${SOURCE_FILES})
 target_link_libraries(particles m)

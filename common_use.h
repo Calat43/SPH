@@ -6,6 +6,10 @@
 
 extern const double pi;
 
+extern const char * DATA_DIR;
+extern const char * PROBLEM_PARAMS_FILE;
+
+
 typedef struct _particleParams{
     int amount;
     double left;
