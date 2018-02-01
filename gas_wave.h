@@ -7,7 +7,7 @@
 
 #include "common_use.h"
 
-void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params);
+//void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params);
 
 //начальное распределение плотности газа
 double gdensity_distribution(double x, ProblemParams params);

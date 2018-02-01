@@ -65,6 +65,7 @@ double found_next_image_gvelocity(double prev_grho, double * prev_image_grho, do
     return -tau * pow(c_s, 2) * velocity + prev_gvelocity;
 }
 
+/*
 void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
@@ -168,3 +169,4 @@ void only_gas_wave(ParticleParams particle_params, ProblemParams problem_params)
         }
     }
 }
+ */

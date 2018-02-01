@@ -70,7 +70,8 @@ int main()
     problem_params.K = 5;
     problem_params.d2g = 0.01;
     problem_params.middle_rho_gas = 1;
-    problem_params.delta = 1. / 100;
+    problem_params.delta = 1. / 10000;
+    problem_params.t_stop = problem_params.d2g / problem_params.K;
 
     //параметры пыли
     ParticleParams dw_particle;
@@ -101,6 +102,8 @@ int main()
         if (params_read != 4) {
             break;
         }
+
+        problem_params.t_stop = problem_params.d2g / problem_params.K;
 
         solve_problem(dw_particle, gw_particle, problem_params);
    }

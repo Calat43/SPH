@@ -19,6 +19,7 @@ typedef struct _problemParams{
     double tau;
     double c_s;
     double K;
+    double t_stop;
     double d2g;
     double middle_rho_gas;
     double delta;
@@ -49,8 +50,11 @@ double found_next_rho(double * image_mass, double * x, double * image_x, int i,
                             ParticleParams particle_params, ProblemParams problem_params);
 
 //x - точка, в которой ищем значение
-double interpolation_value(double * x, double * image_function, double * image_mass, double * image_rho, double * image_x, int i,
+double interpolation_value(double x, double * image_function, double * image_mass, double * image_rho, double * image_x,
                     ParticleParams particle_params, ProblemParams problem_params);
+
+double image_interpolation_value(double * image_x, double * image_function, double * image_mass, double * image_rho,
+                                 double * interpol_x, int i, ParticleParams particleParams, ProblemParams problemParams);
 
 double interpolation_value_for_rho(double x, double * image_mass, double * image_x, int i, ParticleParams particle_params,
                            ProblemParams problem_params);

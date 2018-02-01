@@ -4,8 +4,6 @@
 double ddensity_distribution(double x, ProblemParams params)
 {
     return params.delta * sin(2*pi*x) + params.d2g;
-    //return sin(2*pi*x)/100. + 1;
-    //return sin(2*pi*x)/100 + 0.011;
 }
 
 //начальное распределение скорости пыли
@@ -56,7 +54,7 @@ double found_next_image_dvelocity(double prev_dvelocity)
 {
     return prev_dvelocity;
 }
-
+/*
 void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
@@ -159,3 +157,4 @@ void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params
         }
     }
 }
+ */

@@ -17,11 +17,12 @@ void compute_x(double * x, double * gvelocity, double * dvelocity, ParticleParam
 }
 
 //заполнение массива y, опирающееся на предположение о том, что начальные данные заданы в одних и тех же точках
-void compute_y(double * y, double * gvelocity, double * dvelocity, double * grho, double * drho, ParticleParams params)
+void compute_y(double * y, double * gvelocity, double * dvelocity, double * grho, double * drho, ParticleParams params,
+               ProblemParams problemParams)
 {
     for(int i = 0; i < params.amount; ++i)
     {
-        y[i] = gvelocity[i] + drho[i] / grho[i] * dvelocity[i];
+        y[i] = gvelocity[i] + problemParams.d2g * dvelocity[i];
     }
 }
 
@@ -34,6 +35,8 @@ double found_next_x(double prev_x, double * image_gmass, double * prev_image_grh
     double tau = problem_params.tau;
     double K = problem_params.K;
     double c_s = problem_params.c_s;
+    double d2g = problem_params.d2g;
+    double t_stop = problem_params.t_stop;
     int hN = (int)floor(problem_params.h * amount);
 
     double result = 0;
@@ -45,7 +48,7 @@ double found_next_x(double prev_x, double * image_gmass, double * prev_image_grh
         sum += image_gmass[j] * (1. / prev_image_grho[j] + 1. / prev_grho) * spline_gradient(r, prev_image_x_g[j],
                                                                                              problem_params);
     }
-    denom = 1. + tau * K * (1. / prev_grho + 1. / prev_drho);
+    denom = 1. + tau * (d2g / t_stop + 1. / t_stop);
     result = (- tau * pow(c_s, 2) * sum + prev_x) / denom;
 
     return result;
@@ -74,14 +77,16 @@ double found_next_y(double prev_y, double * image_gmass, double * prev_image_grh
     return result;
 }
 
-double found_next_dvelocity(double next_x, double next_y, double rho_div)
+double found_next_dvelocity(double next_x, double next_y, ProblemParams params)
 {
-    return (next_y - next_x) / (1. + rho_div);
+    double d2g = params.d2g;
+    return (next_y - next_x) / (1. + d2g);
 }
 
-double found_next_gvelocity(double next_x, double next_y, double rho_div)
+double found_next_gvelocity(double next_x, double next_y, ProblemParams params)
 {
-    return (next_y + rho_div * next_x)  / (1 + rho_div);
+    double d2g = params.d2g;
+    return (next_y + d2g * next_x)  / (1 + d2g);
 }
 
 double near_velocity(double r, double * coordinate, double * velocity, ParticleParams params)
@@ -347,10 +352,10 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
     }
 
     compute_x(prev_x_gas, prev_gvelocity, prev_dvel_xg, gas_params);
-    compute_y(prev_y_gas, prev_gvelocity, prev_dvel_xg, prev_grho, prev_drho_xg, gas_params);
+    compute_y(prev_y_gas, prev_gvelocity, prev_dvel_xg, prev_grho, prev_drho_xg, gas_params, problem_params);
 
     compute_x(prev_x_dust, prev_gvel_xd, prev_dvelocity, dust_params);
-    compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params);
+    compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params, problem_params);
     //Массивы для x,y.END
 
     for (int i = 0; i < gamount; ++i)
@@ -431,25 +436,25 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
     {
         printf("%d\n", frameId);
 
-        /*
+/*
         sprintf(fileName, "/home/calat/CLionProjects/particles/differ/gas/xy_gas_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ngas=%d.dat",
                 frameId, problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, gas_params.amount);
         FILE * xy_gas_frame = fopen(fileName, "w");
-        for (int i = 0; i < gamount; ++i)
+        for (int j = 0; j < 3 * gamount - 2; ++j)
         {
-            fprintf(xy_gas_frame, "%lf %lf %lf\n", prev_x_g[i], prev_gvelocity[i], prev_grho[i]);
+            fprintf(xy_gas_frame, "%lf %lf %lf\n", prev_image_x_g[j], prev_image_gvelocity[j], prev_image_grho[j]);
         }
         fclose(xy_gas_frame);
 
         sprintf(fileName, "/home/calat/CLionProjects/particles/differ/dust/xy_dust_%d_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf_Ndust=%d.dat",
                 frameId, problem_params.d2g, problem_params.h, problem_params.tau, problem_params.T, problem_params.K, dust_params.amount);
         FILE * xy_dust_frame = fopen(fileName, "w");
-        for (int i = 0; i < damount; ++i)
+        for (int j = 0; j < 3 * damount - 2; ++j)
         {
-            fprintf(xy_dust_frame, "%lf %lf %lf\n", prev_x_d[i], prev_dvelocity[i], prev_drho[i]);
+            fprintf(xy_dust_frame, "%lf %lf %lf\n", prev_image_x_d[j], prev_image_dvelocity[j], prev_image_drho[j]);
         }
-        fclose(xy_dust_0);
-        */
+        fclose(xy_dust_frame);
+*/
 
         for(int i = 0; i < gamount; ++i)
         {
@@ -506,7 +511,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
             next_y_gas[i] = found_next_y(prev_y_gas[i], image_gmass, prev_image_grho, prev_image_x_g, prev_grho[i],
                                      prev_x_g[i], i, gas_params, problem_params);
             assert(!isnan(next_y_gas[i]));
-            next_gvelocity[i] = found_next_gvelocity(next_x_gas[i], next_y_gas[i], next_drho_xg[i]/next_grho[i]);
+            next_gvelocity[i] = found_next_gvelocity(next_x_gas[i], next_y_gas[i], problem_params);
             assert(!isnan(next_gvelocity[i]));
         }
 
@@ -519,7 +524,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
             next_y_dust[i] = found_next_y(prev_y_dust[i], image_gmass, prev_image_grho, prev_image_x_g, prev_grho_xd[i],
                                      prev_x_d[i], i, gas_params, problem_params);
             assert(!isnan(next_y_dust[i]));
-            next_dvelocity[i] = found_next_dvelocity(next_x_dust[i], next_y_dust[i], next_drho[i]/next_grho_xd[i]);
+            next_dvelocity[i] = found_next_dvelocity(next_x_dust[i], next_y_dust[i], problem_params);
             assert(!isnan(next_dvelocity[i]));
 
         }
@@ -592,10 +597,10 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
         }
 
         compute_x(prev_x_gas, prev_gvelocity, prev_dvel_xg, gas_params);
-        compute_y(prev_y_gas, prev_gvelocity, prev_dvel_xg, prev_grho, prev_drho_xg, gas_params);
+        compute_y(prev_y_gas, prev_gvelocity, prev_dvel_xg, prev_grho, prev_drho_xg, gas_params, problem_params);
 
         compute_x(prev_x_dust, prev_gvel_xd, prev_dvelocity, dust_params);
-        compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params);
+        compute_y(prev_y_dust, prev_gvel_xd, prev_dvelocity, prev_grho_xd, prev_drho, dust_params, problem_params);
     }
 
     sprintf(fileName, "/home/calat/CLionProjects/particles/differ/xy_gas_T_d2g=%lf_h=%lf_tau=%lf_T=%lf_K=%lf.dat",
@@ -617,7 +622,7 @@ void near(ParticleParams gas_params, ParticleParams dust_params, ProblemParams p
     fclose(xy_dust_T);
 }
 
-
+/*
 void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams problem_params)
 {
     int gamount = gas_params.amount;
@@ -837,105 +842,6 @@ void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams
     for (int frameId = 0; frameId < floor(T / tau); ++frameId)
     {
         printf("%d\n", frameId);
-        /*
-            sprintf(fileName, "/home/calat/CLionProjects/particles/delta_vel/delta_gvel_%d.dat", frameId);
-            FILE * delta_gvel_frame = fopen(fileName, "w");
-            for (int i = 0; i < gamount; ++i)
-            {
-                fprintf(delta_gvel_frame, "%lf %lf %lf %lf \n", prev_x_g[i], prev_gvelocity[i], prev_x_d[i], prev_gvel_xd[i]);
-            }
-            fclose(delta_gvel_frame);
-
-            sprintf(fileName, "/home/calat/CLionProjects/particles/delta_vel/delta_dvel_%d.dat", frameId);
-            FILE * delta_dvel_frame = fopen(fileName, "w");
-            for (int i = 0; i < gamount; ++i)
-            {
-                fprintf(delta_dvel_frame, "%lf %lf %lf %lf \n", prev_x_d[i], prev_dvelocity[i], prev_x_g[i], prev_dvel_xg[i]);
-            }
-            fclose(delta_dvel_frame);
-
-            sprintf(fileName, "/home/calat/CLionProjects/particles/delta_vel/delta_grho_%d.dat", frameId);
-            FILE * delta_grho_frame = fopen(fileName, "w");
-            for (int i = 0; i < gamount; ++i)
-            {
-                fprintf(delta_grho_frame, "%lf %lf %lf %lf \n", prev_x_g[i], prev_grho[i], prev_x_d[i], prev_grho_xd[i]);
-            }
-            fclose(delta_grho_frame);
-
-            sprintf(fileName, "/home/calat/CLionProjects/particles/delta_vel/delta_drho_%d.dat", frameId);
-            FILE * delta_drho_frame = fopen(fileName, "w");
-            for (int i = 0; i < gamount; ++i)
-            {
-                fprintf(delta_drho_frame, "%lf %lf %lf %lf \n", prev_x_d[i], prev_drho[i], prev_x_g[i], prev_drho_xg[i]);
-            }
-            fclose(delta_drho_frame);
-
-         */
-/*
-        sprintf(fileName, "/home/calat/CLionProjects/particles/grho/grho_%d.dat", frameId);
-        FILE * grho_frame = fopen(fileName, "w");
-        for (int i = 0; i < gamount; ++i)
-        {
-            fprintf(grho_frame, "%lf %0.15lf\n", prev_x_g[i], prev_grho[i]);
-        }
-        fclose(grho_frame);
-
-        sprintf(fileName, "/home/calat/CLionProjects/particles/gvelocity/gvel_%d.dat", frameId);
-        FILE * gvelocity_frame = fopen(fileName, "w");
-        for (int i = 0; i < gamount; ++i)
-        {
-            fprintf(gvelocity_frame, "%lf %0.15lf\n", prev_x_g[i], prev_gvelocity[i]);
-        }
-        fclose(gvelocity_frame);
-
-        sprintf(fileName, "/home/calat/CLionProjects/particles/drho/drho_%d.dat", frameId);
-        FILE * drho_frame = fopen(fileName, "w");
-        for (int i = 0; i < damount; ++i)
-        {
-            fprintf(drho_frame, "%lf %0.15lf\n", prev_x_d[i], prev_drho[i]);
-        }
-        fclose(drho_frame);
-
-        sprintf(fileName, "/home/calat/CLionProjects/particles/dvelocity/dvel_%d.dat", frameId);
-        FILE * dvelocity_frame = fopen(fileName, "w");
-        for (int i = 0; i < damount; ++i)
-        {
-            fprintf(dvelocity_frame, "%lf %0.15lf\n", prev_x_d[i], prev_dvelocity[i]);
-        }
-        fclose(dvelocity_frame);
-
-        sprintf(fileName, "/home/calat/CLionProjects/particles/xgas/xgas_%d.dat", frameId);
-        FILE * xgas_frame = fopen(fileName, "w");
-        for (int i = 0; i < damount; ++i)
-        {
-            fprintf(xgas_frame, "%lf %0.15lf\n", prev_x_g[i], prev_x_gas[i]);
-        }
-        fclose(xgas_frame);
-
-        sprintf(fileName, "/home/calat/CLionProjects/particles/ygas/ygas_%d.dat", frameId);
-        FILE * ygas_frame = fopen(fileName, "w");
-        for (int i = 0; i < damount; ++i)
-        {
-            fprintf(ygas_frame, "%lf %0.15lf\n", prev_x_g[i], prev_y_gas[i]);
-        }
-        fclose(ygas_frame);
-
-        sprintf(fileName, "/home/calat/CLionProjects/particles/xdust/xdust_%d.dat", frameId);
-        FILE * xdust_frame = fopen(fileName, "w");
-        for (int i = 0; i < damount; ++i)
-        {
-            fprintf(xdust_frame, "%lf %0.15lf\n", prev_x_d[i], prev_x_dust[i]);
-        }
-        fclose(xdust_frame);
-
-        sprintf(fileName, "/home/calat/CLionProjects/particles/ydust/ydust_%d.dat", frameId);
-        FILE * ydust_frame = fopen(fileName, "w");
-        for (int i = 0; i < damount; ++i)
-        {
-            fprintf(ydust_frame, "%lf %0.15lf\n", prev_x_d[i], prev_y_dust[i]);
-        }
-        fclose(ydust_frame);
-*/
 
         for(int i = 0; i < gamount; ++i)
         {
@@ -1075,3 +981,4 @@ void smooth(ParticleParams gas_params, ParticleParams dust_params, ProblemParams
     }
     fclose(xy_dust_T);
 }
+*/

@@ -11,12 +11,12 @@ double spline_kernel(double x_a, double x_b, ProblemParams params)
     double q = r / h;
     double result = 0;
 
-    if (r / h >= 0 && r / h < 1)
+    if (r / h >= 0 && r / h <= 1)
     {
         result = 1 - 3. / 2 * pow(q, 2) + 3. / 4 * pow(q, 3);
         return 2./ 3. / h * result;
     }
-    if (r / h >= 1 && r / h < 2)
+    if (r / h > 1 && r / h <= 2)
     {
         result = 1. / 4 * pow((2. - q), 3);
         return 2./ 3. / h * result;
@@ -35,11 +35,11 @@ double spline_gradient(double x_a, double x_b, ProblemParams params)
     double q = r / h;
     double result = 0;
 
-    if(q >= 0 && q < 1)
+    if(q >= 0 && q <= 1)
     {
         result = - 3 * q + 9. / 4. * q *  q;
     }
-    if( q >= 1 && q < 2)
+    if( q > 1 && q <= 2)
     {
         result = - 3. / 4. * pow((2 - q), 2);
     }
@@ -63,7 +63,6 @@ double found_next_coordinate(double prev_x, double prev_vel, ProblemParams param
 {
     return prev_x + params.tau * prev_vel;
 }
-
 /*
 void coordinate_distribution(double * x, ParticleParams params)
 {
@@ -93,7 +92,6 @@ void fill_image_x(double * image_x, ParticleParams params)
     }
 }
 */
-
 double coord_function(double x_param, double x, int amount, ProblemParams params, ParticleParams particleParams)
 {
     double middle = 0;
@@ -146,6 +144,7 @@ double newton(double x_param, double x, double exact, int amount, ProblemParams 
     }
 }
 
+
 void fill_x(double * coord, ProblemParams problemParams, ParticleParams particleParams)
 {
     int amount = particleParams.amount;
@@ -163,6 +162,7 @@ void fill_x(double * coord, ProblemParams problemParams, ParticleParams particle
     }
 }
 
+
 void fill_image_x(double * image_coord, double * coord, ParticleParams params)
 {
     int amount = params.amount;
@@ -175,48 +175,6 @@ void fill_image_x(double * image_coord, double * coord, ParticleParams params)
     }
 }
 
-/*
-double delta_x(double x, double amount, ProblemParams problemParams)
-{
-    double middle_rho = problemParams.middle_rho_gas;
-    double delta = problemParams.delta;
-
-    return 1. / amount / (middle_rho + delta / 2. / pi * sin(2 * pi * x));
-}
-void fill_x(double * coord, ProblemParams problemParams, ParticleParams particleParams)
-{
-    double x_prev = particleParams.left;
-    double delta_prev = 0;
-
-    for(int i = 0; i < particleParams.amount; ++i)
-    {
-        delta_prev = delta_x(x_prev, particleParams.amount, problemParams);
-        coord[i] = x_prev + 0.5 * delta_prev;
-        x_prev = x_prev + delta_prev;
-    }
-}
-
-void fill_image_x(double * image_coord, ProblemParams problemParams, ParticleParams particleParams)
-{
-    double image_amount = 3 * particleParams.amount - 2;
-    double amount = particleParams.amount;
-
-    double left = particleParams.left;
-    double right = particleParams.right;
-    double new_left = left - (right - left);
-    double new_right = right + (right + left);
-    double leigth  = new_right - new_left;
-    double x_prev = new_left;
-    double delta_prev = 0;
-
-    for(int j = 0; j < image_amount; ++j)
-    {
-        delta_prev = 3 * delta_x(x_prev, image_amount, problemParams);
-        image_coord[j] = x_prev + 0.5 * delta_prev;
-        x_prev = x_prev + delta_prev;
-    }
-}
- */
 
 void dust_fill_image_x(double * image_x, ParticleParams params)
 {
@@ -243,8 +201,8 @@ void fill_image(double * image, double * real, ParticleParams params)
     {
         assert(!isnan(real[i]));
         image[i] = real[i];
-        image[amount - 1 + i] = real[i];
-        image[2 * amount - 2 + i] = real[i];
+        image[amount + i] = real[i];
+        image[2 * amount + i] = real[i];
     }
 }
 
@@ -303,7 +261,7 @@ double found_next_rho(double * image_mass, double * x, double * image_x, int i,
     return rho;
 }
 
-double interpolation_value(double * x, double * image_function, double * image_mass, double * image_rho, double * image_x, int i,
+double interpolation_value(double x, double * image_function, double * image_mass, double * image_rho, double * image_x,
                    ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
@@ -313,7 +271,24 @@ double interpolation_value(double * x, double * image_function, double * image_m
     //for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
     for (int j = 0; j < 3 * amount - 2; ++j)
     {
-        result += image_mass[j] * (image_function[j] / image_rho[j]) * spline_kernel(x[i], image_x[j], problem_params);
+        result += image_mass[j] * (image_function[j] / image_rho[j]) * spline_kernel(x, image_x[j], problem_params);
+        assert(!isnan(result));
+    }
+
+    return result;
+}
+
+double image_interpolation_value(double * image_x, double * image_function, double * image_mass, double * image_rho,
+                                 double * interpol_x, int i, ParticleParams particleParams, ProblemParams problemParams)
+{
+    int amount = particleParams.amount;
+    double result = 0;
+    int hN = (int)floor(problemParams.h * amount);
+
+    //for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+    for (int j = 0; j < 3 * amount - 2; ++j)
+    {
+        result += image_mass[j] * (image_function[j] / image_rho[j]) * spline_kernel(image_x[i], image_x[j], problemParams);
         assert(!isnan(result));
     }
 

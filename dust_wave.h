@@ -7,7 +7,7 @@
 
 #include "common_use.h"
 
-void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params);
+//void only_dust_wave(ParticleParams particle_params, ProblemParams problem_params);
 
 //начальное распределение плотности пыли
 double ddensity_distribution(double x, ProblemParams params);
