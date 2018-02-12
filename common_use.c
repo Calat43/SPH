@@ -1,8 +1,10 @@
-#include <assert.h>
-#include <stdbool.h>
 #include "common_use.h"
 
 const double pi = 3.14159265358;
+
+const char * DATA_DIR = "/home/calat/CLionProjects/particles/differ";
+
+const char * PROBLEM_PARAMS_FILE = "/home/calat/CLionProjects/particles/problem_params.txt";
 
 double spline_kernel(double x_a, double x_b, ProblemParams params)
 {
@@ -59,10 +61,11 @@ double spline_gradient(double x_a, double x_b, ProblemParams params)
     assert(false);
 }
 
-double found_next_coordinate(double prev_x, double prev_vel, ProblemParams params)
+double next_coordinate(double prev_x, double prev_vel, ProblemParams params)
 {
     return prev_x + params.tau * prev_vel;
 }
+
 /*
 void coordinate_distribution(double * x, ParticleParams params)
 {
@@ -91,7 +94,8 @@ void fill_image_x(double * image_x, ParticleParams params)
         image_x[j] = new_left + j * (new_right - new_left) / (3*(amount - 1));
     }
 }
-*/
+ */
+
 double coord_function(double x_param, double x, int amount, ProblemParams params, ParticleParams particleParams)
 {
     double middle = 0;
@@ -126,13 +130,10 @@ double newton(double x_param, double x, double exact, int amount, ProblemParams 
 {
     double prev_x = x;
     double next_x = 0;
-    double tmp = 0;
     int i = 0;
 
     while(true)
     {
-        printf("%d   %0.20lf %0.20lf\n", i, fabs(next_x - prev_x), next_x);
-        //tmp = deriv_func(x_param, prev_x, params);
         next_x = prev_x - coord_function(x_param, prev_x, amount, params, particleParams)
                           / deriv_func(x_param, prev_x, params, particleParams);
         if(fabs(next_x - prev_x) < exact)
@@ -144,12 +145,11 @@ double newton(double x_param, double x, double exact, int amount, ProblemParams 
     }
 }
 
-
 void fill_x(double * coord, ProblemParams problemParams, ParticleParams particleParams)
 {
     int amount = particleParams.amount;
     double x_estimate = 1. / amount;
-    double exact = 1. / 100000000. / amount;
+    double exact = 1. / 10000000. / amount;
     double prev_x = 0;
     double next_x = 0;
 
@@ -172,24 +172,6 @@ void fill_image_x(double * image_coord, double * coord, ParticleParams params)
         image_coord[i] = coord[i] - 1.;
         image_coord[amount + i] = coord[i];
         image_coord[2 * amount + i] = coord[i] + 1;
-    }
-}
-
-
-void dust_fill_image_x(double * image_x, ParticleParams params)
-{
-    int amount = params.amount;
-    double left = params.left;
-    double right = params.right;
-
-    double new_left = left - (right - left);
-    double new_right = right + (right + left);
-
-    double mix = (right - left) / (amount - 1) / 2.;
-
-    for (int j = 0; j < 3 * amount - 2; ++j)
-    {
-        image_x[j] = new_left + j * (new_right - new_left) / (3*(amount - 1)) + mix;
     }
 }
 
@@ -228,6 +210,27 @@ void fill_initial_rho(double * rho, double  * image_mass, double * x, double * i
     }
 }
 
+void fill_initial_rho_const_mass(double * rho, double mass, double * x, double * image_x,
+                                 ParticleParams particleParams, ProblemParams problemParams)
+{
+    int amount = particleParams.amount;
+    int hN = (int)floor(problemParams.h * amount);
+
+    for(int i = 0; i < amount; ++i)
+    {
+        rho[i] = 0;
+        //for (int j = i + amount - 1 - 2*hN; j < i + amount + 2*hN + 1; ++j)
+        for(int j = 0; j < 3 * amount - 2; ++j)
+        {
+            rho[i] += mass * spline_kernel(x[i], image_x[j], problemParams);
+            if(rho == 0)
+            {
+                assert(false);
+            }
+        }
+    }
+}
+
 void fill_mass(double * mass, ParticleParams params, ProblemParams problemParams)
 {
     double middle_rho = 0;
@@ -246,7 +249,22 @@ void fill_mass(double * mass, ParticleParams params, ProblemParams problemParams
     }
 }
 
-double found_next_rho(double * image_mass, double * x, double * image_x, int i,
+double compute_mass(ParticleParams particleParams, ProblemParams problemParams)
+{
+    double middle_rho = 0;
+    if(particleParams.isGas == true)
+    {
+        middle_rho = problemParams.middle_rho_gas;
+    }
+    else
+    {
+        middle_rho  = problemParams.d2g;
+    }
+
+    return middle_rho / particleParams.amount;
+}
+
+double next_rho(double * image_mass, double * x, double * image_x, int i,
                              ParticleParams particle_params, ProblemParams problem_params)
 {
     int amount = particle_params.amount;
@@ -259,6 +277,21 @@ double found_next_rho(double * image_mass, double * x, double * image_x, int i,
         rho += image_mass[j] * spline_kernel(x[i], image_x[j], problem_params);
     }
     return rho;
+}
+
+double next_rho_const_mass(double mass, double * x, double * image_x, int i, ParticleParams particleParams,
+                           ProblemParams problemParams)
+{
+    int amount = particleParams.amount;
+    double rho = 0;
+    for(int j = 0; j < 3 * amount - 2; ++j)
+    {
+        if (isnan(x[i])) {
+            assert(false);
+        }
+        rho += spline_kernel(x[i], image_x[j], problemParams);
+    }
+    return mass * rho;
 }
 
 double interpolation_value(double x, double * image_function, double * image_mass, double * image_rho, double * image_x,

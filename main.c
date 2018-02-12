@@ -1,12 +1,16 @@
 #include <time.h>
 #include <assert.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <string.h>
 #include "common_use.h"
 #include "gas_stair.h"
 #include "gas_wave.h"
 #include "dust_wave.h"
-#include "four_eq.h"
+#include "explicit.h"
 #include "xy_system.h"
 #include "fscanf.h"
+#include "cells.h"
 
 void solve_problem(ParticleParams dw_particle, ParticleParams gw_particle, ProblemParams problem_params)
 {
@@ -20,39 +24,10 @@ void solve_problem(ParticleParams dw_particle, ParticleParams gw_particle, Probl
 
     clock_t startTime = clock();
 
-    ParticleParams gs_particle;
-    gs_particle.amount = 400;
-    gs_particle.left = 0;
-    gs_particle.right = 1;
-
-    /*
-    xy_value("/home/calat/CLionProjects/particles/xy_value/xy_K=100_T=0.out",
-             "/home/calat/CLionProjects/particles/dustywaveK=1000-t0.000.out");
-
-    xy_value("/home/calat/CLionProjects/particles/xy_value/xy_K=100_T=0.5.out",
-             "/home/calat/CLionProjects/particles/dustywaveK=100-t0.500.out");
-
-    xy_value("/home/calat/CLionProjects/particles/xy_value/xy_K=1000_T=0.out",
-             "/home/calat/CLionProjects/particles/dustywaveK=1000-t0.000.out");
-
-    xy_value("/home/calat/CLionProjects/particles/xy_value/xy_K=1000_T=0.5.out",
-             "/home/calat/CLionProjects/particles/dustywaveK=1000-t0.500.out");
-
-    xy_value("/home/calat/CLionProjects/particles/xy_value/xy_K=1_T=0.out",
-             "/home/calat/CLionProjects/particles/dustywave-t0.000.out");
-
-    xy_value("/home/calat/CLionProjects/particles/xy_value/xy_K=1_T=0.5.out",
-             "/home/calat/CLionProjects/particles/dustywave-t0.500.out");
-
-    */
-
-    //stair_gas_print(gs_particle, problem_params);
-    //only_dust_wave(dw_particle, problem_params);
-    //only_gas_wave(gw_particle, problem_params);
-    //whole_system(gw_particle, dw_particle, problem_params);
-
-    near(gw_particle, dw_particle, problem_params);
-    //smooth(gw_particle, dw_particle, problem_params);
+    //explicit_scheme(gw_particle, dw_particle, problem_params);
+    //near_scheme(gw_particle, dw_particle, problem_params);
+    cells(problem_params.h, gw_particle, dw_particle, problem_params);
+    
 
     clock_t finishTime = clock();
 
@@ -73,6 +48,8 @@ int main()
     problem_params.delta = 1. / 10000;
     problem_params.t_stop = problem_params.d2g / problem_params.K;
 
+
+    //ATTENTION! (dust amount = gas amount) || (dust amount = 2 * gas amount) || (2 * dust amount = gas amount)
     //параметры пыли
     ParticleParams dw_particle;
     dw_particle.amount = 400;
@@ -87,19 +64,30 @@ int main()
     gw_particle.right = 1;
     gw_particle.isGas = true;
 
+    // Create DATA_DIR if not exists
+    //DATA_DIR and PROBLEM_PARAMS_FILE change in common_use.c
+    struct stat st;
+    if (stat(DATA_DIR, &st) == -1) {
+        mkdir(DATA_DIR, 0700);
+    }
 
-    FILE * paramsFile = fopen("problem_params.txt", "r");
+    FILE * paramsFile = fopen(PROBLEM_PARAMS_FILE, "r");
+    if (paramsFile == NULL) {
+        printf(stderr, "Error opening file: %s\n", strerror( errno ));
+        return errno;
+    }
     while (true)
     {
         int params_read = fscanf(
                 paramsFile,
-                "%lf %lf %lf %lf",
+                "%lf %lf %lf %lf %lf",
+                &(problem_params.delta),
                 &(problem_params.d2g),
                 &(problem_params.K),
                 &(problem_params.h),
                 &(problem_params.tau)
         );
-        if (params_read != 4) {
+        if (params_read != 5) {
             break;
         }
 
